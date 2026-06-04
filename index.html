@@ -216,7 +216,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
   <div class="officials-card">
     <div class="officials-card-header"><i class="ti ti-whistle" style="font-size:15px;color:#888"></i>Match officials</div>
     <div class="officials-grid">
-      <div class="official-field"><span class="official-label">Referee (CR)</span><input class="official-input" id="ref-name" placeholder="Name" /></div>
+      <div class="official-field"><span class="official-label">Referee</span><input class="official-input" id="ref-name" placeholder="Name" /></div>
       <div class="official-field"><span class="official-label">Fourth Official</span><input class="official-input" id="fourth-official" placeholder="Name" /></div>
       <div class="official-field"><span class="official-label">Assistant Referee 1</span><input class="official-input" id="ar1-name" placeholder="Name" /></div>
       <div class="official-field"><span class="official-label">Assistant Referee 2</span><input class="official-input" id="ar2-name" placeholder="Name" /></div>
@@ -290,7 +290,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
         <div class="official-filter-row" id="official-filter-row" style="display:none">
           <span class="official-filter-label">Official:</span>
           <span class="off-chip all-chip active" id="off-chip-all" onclick="setOfficialFilter('all')">All</span>
-          <span class="off-chip" id="off-chip-CR" onclick="setOfficialFilter('CR')">CR</span>
+          <span class="off-chip" id="off-chip-Referee" onclick="setOfficialFilter('Referee')">Referee</span>
           <span class="off-chip" id="off-chip-AR1" onclick="setOfficialFilter('AR1')">AR1</span>
           <span class="off-chip" id="off-chip-AR2" onclick="setOfficialFilter('AR2')">AR2</span>
           <span class="off-chip" id="off-chip-4th" onclick="setOfficialFilter('4th')">4th</span>
@@ -320,7 +320,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
     <input id="modal-player" placeholder="e.g. #10 or Müller" />
     <label>Officials involved <span style="font-size:10px;color:#888;font-weight:400">(select all that apply)</span></label>
     <div class="officials-chips" id="modal-officials-chips">
-      <span class="official-chip" data-pos="CR" onclick="toggleModalOfficial(this)">CR</span>
+      <span class="official-chip" data-pos="Referee" onclick="toggleModalOfficial(this)">Referee</span>
       <span class="official-chip" data-pos="AR1" onclick="toggleModalOfficial(this)">AR1</span>
       <span class="official-chip" data-pos="AR2" onclick="toggleModalOfficial(this)">AR2</span>
       <span class="official-chip" data-pos="4th" onclick="toggleModalOfficial(this)">4th</span>
@@ -405,7 +405,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 </div>
 
 <script>
-const OFFICIALS=[{id:'CR',label:'CR'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
+const OFFICIALS=[{id:'Referee',label:'Referee'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
 
 let clockRunning=false,clockInterval=null;
 let periods=[];
@@ -416,7 +416,7 @@ let homeScore=0,awayScore=0,homePens=0,awayPens=0;
 let events=[],selectedTeam='home',currentEventType='',currentIsMissed=false;
 let modalCMI=false,modalCRE=false,modalSelectedOfficials=new Set();
 let activeTab='all',activeTypeFilters=new Set(),statsTeam='all';
-let activeOfficialFilter='all'; // 'all' | 'CR' | 'AR1' | 'AR2' | '4th' | 'none'
+let activeOfficialFilter='all'; // 'all' | 'Referee' | 'AR1' | 'AR2' | '4th' | 'none'
 let popoverEventId=null,selectedPeriodType='half';
 
 function pad(n){return String(n).padStart(2,'0');}
@@ -618,7 +618,7 @@ function setTab(t){activeTab=t;['all','missed','cmi','cre'].forEach(tab=>documen
 
 function setOfficialFilter(val){
   activeOfficialFilter=val;
-  ['all','CR','AR1','AR2','4th','none'].forEach(v=>{
+  ['all','Referee','AR1','AR2','4th','none'].forEach(v=>{
     let el=document.getElementById('off-chip-'+v);
     if(el) el.className='off-chip'+(v==='all'?' all-chip':'')+(v===val?' active':'');
   });
@@ -719,7 +719,7 @@ function getSummary(){
     return o.label+':\n'+oEvs.slice().reverse().map(e=>'  '+pad(e.minute)+':'+pad(e.second||0)+' ['+e.type+']'+(e.cmi?' CMI':'')+(e.cre?' CRE':'')+(e.decision?' - '+e.decision:'')+(e.notes?' - '+e.notes:'')).join('\n');
   }).join('\n\n');
   let periodSummary=periods.map(p=>p.name+(p.length?' ('+p.length+' min)':'')).join(', ');
-  return 'Match: '+match+(comp?' | '+comp:'')+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee (CR): '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nALL EVENTS:\n'+( events.slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(events.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(events.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(events.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
+  return 'Match: '+match+(comp?' | '+comp:'')+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee: '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nALL EVENTS:\n'+( events.slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(events.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(events.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(events.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
 }
 
 function exportLog(){let blob=new Blob([getSummary()],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='match_log.txt';a.click();}
