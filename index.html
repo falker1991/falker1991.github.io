@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Legacy iOS standalone web app capabilities -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="App Short Name">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Match Event Logger</title>
@@ -84,8 +79,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .evt-btn .ico { font-size: 17px; }
 .evt-btn .lbl { font-size: 10px; color: var(--color-text-secondary); text-align: center; line-height: 1.3; }
 .evt-btn.goal { border-color: #639922; background: #EAF3DE; } .evt-btn.goal .ico { color: #3B6D11; }
-.evt-btn.yellow { border-color: #BA7517; background: #FAEEDA; } .evt-btn.yellow .ico { color: #e6ff06; }
-.evt-btn.red { border-color: #A32D2D; background: #FCEBEB; } .evt-btn.red .ico { color: #ff0000; }
+.evt-btn.yellow { border-color: #BA7517; background: #FAEEDA; } .evt-btn.yellow .ico { color: #854F0B; }
+.evt-btn.red { border-color: #A32D2D; background: #FCEBEB; } .evt-btn.red .ico { color: #791F1F; }
 .evt-btn.foul { border-color: #185FA5; background: #E6F1FB; } .evt-btn.foul .ico { color: #0C447C; }
 .evt-btn.sub { border-color: #533AB7; background: #EEEDFE; } .evt-btn.sub .ico { color: #3C3489; }
 .evt-btn.injury { border-color: #D85A30; background: #FAECE7; } .evt-btn.injury .ico { color: #993C1D; }
@@ -99,8 +94,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .missed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 1rem; }
 .evt-btn.missed { border-style: dashed; border-width: 1.5px; }
 .evt-btn.missed-foul { border-color: #A32D2D; background: #FFF5F5; } .evt-btn.missed-foul .ico { color: #A32D2D; }
-.evt-btn.missed-yellow-card { border-color: #854F0B; background: #FFFAF5; } .evt-btn.missed-yellow-card .ico { color: #BA7517; }
-.evt-btn.missed-red-card { border-color: #854F0B; background: #FFFAF5; } .evt-btn.missed-red-card .ico { color: #ff0000; }
+.evt-btn.missed-card { border-color: #854F0B; background: #FFFAF5; } .evt-btn.missed-card .ico { color: #854F0B; }
 .evt-btn.missed-offside { border-color: #555452; background: #F8F7F4; } .evt-btn.missed-offside .ico { color: #555452; }
 .evt-btn.missed-goal { border-color: #639922; background: #F5FFF0; } .evt-btn.missed-goal .ico { color: #3B6D11; }
 .missed-badge { position: absolute; top: 3px; right: 3px; font-size: 8px; font-weight: 700; color: #A32D2D; background: #FCEBEB; border-radius: 99px; padding: 1px 4px; border: 0.5px solid #A32D2D; line-height: 1.4; }
@@ -197,7 +191,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Falk Match Logger</h2><p>Mentoring Assistant</p></div>
+    <div class="header-left"><h2>Match Event Logger</h2><p>Referee evaluation tool</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -211,11 +205,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
   <div class="period-row" id="period-row"></div>
 
   <div class="match-info-row">
-    <input placeholder="Match date" id="match-date" style="font-size:12px;" />
-    <input placeholder="Match time" id="match-time" style="font-size:12px;" />
-    <input placeholder="Venue" id="match-venue" style="font-size:12px;" />
+    <input placeholder="Match date / venue" id="match-info" style="font-size:12px;" />
     <input placeholder="Competition / league" id="competition" style="font-size:12px;" />
-    <input placeholder="Age Group" id="match-age" style="font-size:12px;" />
   </div>
 
   <div class="officials-card">
@@ -261,23 +252,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
   <p class="section-label">Log an event</p>
   <div class="event-grid">
     <button class="evt-btn goal" onclick="openModal('Goal')"><i class="ti ti-ball-football ico"></i><span class="lbl">Goal</span></button>
-    <button class="evt-btn foul" onclick="openModal('Foul')"><i class="ti ti-alert-triangle ico"></i><span class="lbl">Foul</span></button>
-    <button class="evt-btn penalty" onclick="openModal('Penalty')"><i class="ti ti-circle-dot ico"></i><span class="lbl">Penalty</span></button>
     <button class="evt-btn yellow" onclick="openModal('Yellow Card')"><i class="ti ti-square ico" style="color:#BA7517"></i><span class="lbl">Yellow Card</span></button>
     <button class="evt-btn red" onclick="openModal('Red Card')"><i class="ti ti-square ico"></i><span class="lbl">Red Card</span></button>
+    <button class="evt-btn foul" onclick="openModal('Foul')"><i class="ti ti-alert-triangle ico"></i><span class="lbl">Foul</span></button>
+    <button class="evt-btn penalty" onclick="openModal('Penalty')"><i class="ti ti-circle-dot ico"></i><span class="lbl">Penalty</span></button>
     <button class="evt-btn offside" onclick="openModal('Offside')"><i class="ti ti-flag ico"></i><span class="lbl">Offside</span></button>
-    <button class="evt-btn goalkick" onclick="openModal('Goal Kick')"><i class="ti ti-arrow-back-up ico"></i><span class="lbl">Goal Kick</span></button>
     <button class="evt-btn corner" onclick="openModal('Corner Kick')"><i class="ti ti-corner-up-right ico"></i><span class="lbl">Corner Kick</span></button>
+    <button class="evt-btn goalkick" onclick="openModal('Goal Kick')"><i class="ti ti-arrow-back-up ico"></i><span class="lbl">Goal Kick</span></button>
     <button class="evt-btn sub" onclick="openModal('Substitution')"><i class="ti ti-arrows-exchange ico"></i><span class="lbl">Sub</span></button>
     <button class="evt-btn injury" onclick="openModal('Injury')"><i class="ti ti-first-aid-kit ico"></i><span class="lbl">Injury</span></button>
+    <button class="evt-btn save" onclick="openModal('Save')"><i class="ti ti-hand-stop ico"></i><span class="lbl">Save</span></button>
+    <button class="evt-btn var" onclick="openModal('VAR Review')"><i class="ti ti-device-tv ico"></i><span class="lbl">VAR</span></button>
     <button class="evt-btn note" onclick="openModal('Referee Note')"><i class="ti ti-notes ico"></i><span class="lbl">Note</span></button>
   </div>
 
   <p class="section-label" style="margin-bottom:6px;">Missed calls</p>
   <div class="missed-grid">
     <button class="evt-btn missed missed-foul" onclick="openModal('Missed Foul',true)"><span class="missed-badge">MISSED</span><i class="ti ti-alert-triangle ico"></i><span class="lbl">Missed Foul</span></button>
-    <button class="evt-btn missed missed-yellow-card" onclick="openModal('Missed Yellow Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico"></i><span class="lbl">Missed Yellow Card</span></button>
-    <button class="evt-btn missed missed-red-card" onclick="openModal('Missed Red Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico"></i><span class="lbl">Missed Red Card</span></button>
+    <button class="evt-btn missed missed-card" onclick="openModal('Missed Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico"></i><span class="lbl">Missed Card</span></button>
     <button class="evt-btn missed missed-offside" onclick="openModal('Missed Offside',true)"><span class="missed-badge">MISSED</span><i class="ti ti-flag ico"></i><span class="lbl">Missed Offside</span></button>
     <button class="evt-btn missed missed-goal" onclick="openModal('Missed Goal',true)"><span class="missed-badge">MISSED</span><i class="ti ti-ball-football ico"></i><span class="lbl">Missed Goal</span></button>
   </div>
@@ -295,7 +287,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
         <div class="official-filter-row" id="official-filter-row" style="display:none">
           <span class="official-filter-label">Official:</span>
           <span class="off-chip all-chip active" id="off-chip-all" onclick="setOfficialFilter('all')">All</span>
-          <span class="off-chip" id="off-chip-Referee" onclick="setOfficialFilter('Referee')">Referee</span>
+          <span class="off-chip" id="off-chip-CR" onclick="setOfficialFilter('CR')">Referee</span>
           <span class="off-chip" id="off-chip-AR1" onclick="setOfficialFilter('AR1')">AR1</span>
           <span class="off-chip" id="off-chip-AR2" onclick="setOfficialFilter('AR2')">AR2</span>
           <span class="off-chip" id="off-chip-4th" onclick="setOfficialFilter('4th')">4th</span>
@@ -325,7 +317,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
     <input id="modal-player" placeholder="e.g. #10 or Müller" />
     <label>Officials involved <span style="font-size:10px;color:#888;font-weight:400">(select all that apply)</span></label>
     <div class="officials-chips" id="modal-officials-chips">
-      <span class="official-chip" data-pos="Referee" onclick="toggleModalOfficial(this)">Referee</span>
+      <span class="official-chip" data-pos="CR" onclick="toggleModalOfficial(this)">Referee</span>
       <span class="official-chip" data-pos="AR1" onclick="toggleModalOfficial(this)">AR1</span>
       <span class="official-chip" data-pos="AR2" onclick="toggleModalOfficial(this)">AR2</span>
       <span class="official-chip" data-pos="4th" onclick="toggleModalOfficial(this)">4th</span>
@@ -410,43 +402,87 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 </div>
 
 <script>
-const OFFICIALS=[{id:'Referee',label:'Referee'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
+const OFFICIALS=[{id:'CR',label:'Referee'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
 
 let clockRunning=false,clockInterval=null;
 let periods=[];
 let currentPeriodIdx=-1;
-let periodElapsed=0;
-let globalElapsed=0;
+// periodElapsed and globalElapsed are in whole seconds, snapshotted at pause/start
+let periodElapsedBase=0;   // seconds accumulated before the current run started
+let globalElapsedBase=0;
+let clockStartWall=null;   // Date.now() when clock was last started
 let homeScore=0,awayScore=0,homePens=0,awayPens=0;
 let events=[],selectedTeam='home',currentEventType='',currentIsMissed=false;
 let modalCMI=false,modalCRE=false,modalSelectedOfficials=new Set();
 let activeTab='all',activeTypeFilters=new Set(),statsTeam='all';
-let activeOfficialFilter='all'; // 'all' | 'Referee' | 'AR1' | 'AR2' | '4th' | 'none'
+let activeOfficialFilter='all'; // 'all' | 'CR' | 'AR1' | 'AR2' | '4th' | 'none'
 let popoverEventId=null,selectedPeriodType='half';
 
 function pad(n){return String(n).padStart(2,'0');}
 function clockStr(s){return pad(Math.floor(s/60))+':'+pad(s%60);}
 function currentPeriod(){return periods[currentPeriodIdx]||null;}
 
+// Return live seconds elapsed this period (accounts for wall time while running)
+function livePeriodElapsed(){
+  if(!clockRunning||clockStartWall===null) return periodElapsedBase;
+  return periodElapsedBase + Math.floor((Date.now()-clockStartWall)/1000);
+}
+function liveGlobalElapsed(){
+  if(!clockRunning||clockStartWall===null) return globalElapsedBase;
+  return globalElapsedBase + Math.floor((Date.now()-clockStartWall)/1000);
+}
+
 function updateClockDisplay(){
   let p=currentPeriod();
   if(!p){document.getElementById('clock').textContent='00:00';document.getElementById('clock-period').textContent='Not started';return;}
+  let secs=livePeriodElapsed();
   let disp;
-  if(p.countsUp){disp=clockStr(p.startOffset+periodElapsed);}
-  else{let r=Math.max(0,p.length*60-periodElapsed);disp=clockStr(r);}
+  if(p.countsUp){disp=clockStr(p.startOffset+secs);}
+  else{let r=Math.max(0,p.length*60-secs);disp=clockStr(r);}
   document.getElementById('clock').textContent=disp;
   document.getElementById('clock-period').textContent=p.name;
 }
 
+function startClockInterval(){
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval=setInterval(updateClockDisplay,500); // 500ms for responsive display
+}
+
 function toggleClock(){
   if(!currentPeriod()){openNextPeriod();return;}
-  if(clockRunning){clearInterval(clockInterval);clockRunning=false;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';document.getElementById('clock-btn').classList.remove('active');}
-  else{clockRunning=true;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';document.getElementById('clock-btn').classList.add('active');clockInterval=setInterval(()=>{periodElapsed++;globalElapsed++;updateClockDisplay();},1000);}
+  if(clockRunning){
+    // Pause: snapshot how much time has elapsed
+    periodElapsedBase=livePeriodElapsed();
+    globalElapsedBase=liveGlobalElapsed();
+    clockStartWall=null;
+    clearInterval(clockInterval);clockInterval=null;
+    clockRunning=false;
+    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';
+    document.getElementById('clock-btn').classList.remove('active');
+    updateClockDisplay();
+  } else {
+    clockStartWall=Date.now();
+    clockRunning=true;
+    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';
+    document.getElementById('clock-btn').classList.add('active');
+    startClockInterval();
+  }
 }
+
+// When tab becomes visible again, resync the display immediately
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden && clockRunning) updateClockDisplay();
+});
 
 function getDisplayMinute(){
   let p=currentPeriod();if(!p)return 0;
-  return Math.floor((p.startOffset+periodElapsed)/60);
+  return Math.floor((p.startOffset+livePeriodElapsed())/60);
+}
+function getDisplaySecond(){
+  let secs=livePeriodElapsed();
+  let p=currentPeriod();
+  let total=p?(p.startOffset+secs):secs;
+  return total%60;
 }
 
 function openNextPeriod(){
@@ -476,7 +512,15 @@ function selectPeriodType(el){
 }
 
 function startNextPeriod(){
-  if(clockRunning){clearInterval(clockInterval);clockRunning=false;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';document.getElementById('clock-btn').classList.remove('active');}
+  if(clockRunning){
+    periodElapsedBase=livePeriodElapsed();
+    globalElapsedBase=liveGlobalElapsed();
+    clockStartWall=null;
+    clearInterval(clockInterval);clockInterval=null;
+    clockRunning=false;
+    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';
+    document.getElementById('clock-btn').classList.remove('active');
+  }
   let type=selectedPeriodType;
   let length=parseInt(document.getElementById('period-length-input').value)||45;
   let countsUp=document.getElementById('clock-counts-up').checked;
@@ -504,12 +548,14 @@ function startNextPeriod(){
   if(currentPeriodIdx>=0)periods[currentPeriodIdx].done=true;
   periods.push({name,type,length,countsUp,startOffset,done:false});
   currentPeriodIdx=periods.length-1;
-  periodElapsed=0;
-  renderPeriodPills();closePeriodModal();updateClockDisplay();
+  periodElapsedBase=0;
+  globalElapsedBase=liveGlobalElapsed(); // preserve global elapsed across periods
+  clockStartWall=Date.now();
   clockRunning=true;
+  renderPeriodPills();closePeriodModal();updateClockDisplay();
   document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';
   document.getElementById('clock-btn').classList.add('active');
-  clockInterval=setInterval(()=>{periodElapsed++;globalElapsed++;updateClockDisplay();},1000);
+  startClockInterval();
 }
 
 function renderPeriodPills(){
@@ -591,10 +637,10 @@ function saveEvent(){
   let teamName=selectedTeam==='home'?hn:an;
   let officials=Array.from(modalSelectedOfficials);
   let p=currentPeriod();
-  let displaySecs=p?(p.startOffset+periodElapsed):0;
+  let displaySecs=p?(p.startOffset+livePeriodElapsed()):0;
   let dispMin=Math.floor(displaySecs/60);
   let dispSec=displaySecs%60;
-  let ev={id:Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:selectedTeam,teamName,player,notes,decision,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,officials,minute:dispMin,second:dispSec,periodName:p?p.name:'',globalSec:globalElapsed};
+  let ev={id:Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:selectedTeam,teamName,player,notes,decision,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,officials,minute:dispMin,second:dispSec,periodName:p?p.name:'',globalSec:liveGlobalElapsed()};
   events.unshift(ev);
   if(currentEventType==='Goal'){if(selectedTeam==='home')homeScore++;else awayScore++;document.getElementById('home-score').textContent=homeScore;document.getElementById('away-score').textContent=awayScore;}
   if(currentEventType==='Penalty'&&isShootout()){if(selectedTeam==='home')homePens++;else awayPens++;document.getElementById('home-pens').textContent=homePens;document.getElementById('away-pens').textContent=awayPens;}
@@ -623,7 +669,7 @@ function setTab(t){activeTab=t;['all','missed','cmi','cre'].forEach(tab=>documen
 
 function setOfficialFilter(val){
   activeOfficialFilter=val;
-  ['all','Referee','AR1','AR2','4th','none'].forEach(v=>{
+  ['all','CR','AR1','AR2','4th','none'].forEach(v=>{
     let el=document.getElementById('off-chip-'+v);
     if(el) el.className='off-chip'+(v==='all'?' all-chip':'')+(v===val?' active':'');
   });
@@ -706,10 +752,7 @@ function getSummary(){
   let ar1=document.getElementById('ar1-name').value||'Unknown';
   let ar2=document.getElementById('ar2-name').value||'Unknown';
   let fourth=document.getElementById('fourth-official').value||'Unknown';
-  let date=document.getElementById('match-date').value||'Unknown match';
-  let time=document.getElementById('match-time').value||'';
-  let venue=document.getElementById('match-venue').value||'';
-  let age=document.getElementById('match-age').value||'';
+  let match=document.getElementById('match-info').value||'Unknown match';
   let comp=document.getElementById('competition').value||'';
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   let fmt=e=>{
