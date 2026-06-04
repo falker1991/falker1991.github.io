@@ -24,6 +24,23 @@
   --border-radius-lg: 11px;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+body.dark {
+  --color-text-primary: #f0f0ee;
+  --color-text-secondary: #aaa;
+  --color-text-tertiary: #777;
+  --color-background-primary: #1c1c1e;
+  --color-background-secondary: #2c2c2e;
+  --color-border-tertiary: #3a3a3c;
+  --color-border-secondary: #48484a;
+  --color-background-info: #1a3a5c;
+  --color-text-info: #7ab8f5;
+  --color-border-info: #4a90d9;
+  --color-background-danger: #3a1a1a;
+  --color-text-danger: #f5a0a0;
+  --color-border-danger: #c04040;
+}
+.dark-toggle { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 9px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+.dark-toggle:hover { background: var(--color-background-secondary); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); }
 input, select, textarea, button { font-family: inherit; }
@@ -85,9 +102,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .evt-btn.sub { border-color: #533AB7; background: #EEEDFE; } .evt-btn.sub .ico { color: #3C3489; }
 .evt-btn.injury { border-color: #D85A30; background: #FAECE7; } .evt-btn.injury .ico { color: #993C1D; }
 .evt-btn.offside { border-color: #888780; background: #F1EFE8; } .evt-btn.offside .ico { color: #444441; }
+.evt-btn.var { border-color: #185FA5; background: #E6F1FB; } .evt-btn.var .ico { color: #0C447C; }
 .evt-btn.corner { border-color: #0F6E56; background: #E1F5EE; } .evt-btn.corner .ico { color: #085041; }
 .evt-btn.goalkick { border-color: #0F6E56; background: #E1F5EE; } .evt-btn.goalkick .ico { color: #085041; }
 .evt-btn.penalty { border-color: #993556; background: #FBEAF0; } .evt-btn.penalty .ico { color: #72243E; }
+.evt-btn.save { border-color: #3B6D11; background: #EAF3DE; } .evt-btn.save .ico { color: #27500A; }
 .evt-btn.note { border-color: #5F5E5A; background: #F1EFE8; } .evt-btn.note .ico { color: #2C2C2A; }
 .missed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 1rem; }
 .evt-btn.missed { border-style: dashed; border-width: 1.5px; }
@@ -137,6 +156,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .tab-btn .tab-count.has-missed { background: #FCEBEB; color: #791F1F; }
 .tab-btn .tab-count.has-cmi { background: #FFF3CD; color: #7A5800; }
 .tab-btn .tab-count.has-cre { background: #F3E8FF; color: #5B1FA5; }
+.tab-btn .tab-count.has-review { background: #FFF3CD; color: #7A5800; }
 .type-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .type-chip { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
 .type-chip.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
@@ -150,6 +170,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .event-item.missed-item { border-color: #F7C1C1; border-style: dashed; background: #FFFAFA; }
 .event-item.cmi-item { border-color: #C49A00; background: #FFFDF0; }
 .event-item.cre-item { border-color: #8B3FC8; background: #FAF5FF; }
+.event-item.review-item { border-color: #C49A00; background: #FFFDF0; }
 .event-min { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); min-width: 42px; font-variant-numeric: tabular-nums; font-family: monospace, monospace; }
 .event-body { flex: 1; min-width: 0; }
 .event-type-row { font-size: 12px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
@@ -197,6 +218,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
       </div>
       <button class="clock-btn" id="clock-btn" onclick="toggleClock()"><i class="ti ti-player-play"></i></button>
       <button class="clock-btn" onclick="openNextPeriod()" title="Next period">⏭</button>
+      <button class="dark-toggle" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button>
     </div>
   </div>
 
@@ -259,6 +281,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
     <button class="evt-btn goalkick" onclick="openModal('Goal Kick')"><i class="ti ti-arrow-back-up ico"></i><span class="lbl">Goal Kick</span></button>
     <button class="evt-btn sub" onclick="openModal('Substitution')"><i class="ti ti-arrows-exchange ico"></i><span class="lbl">Sub</span></button>
     <button class="evt-btn injury" onclick="openModal('Injury')"><i class="ti ti-first-aid-kit ico"></i><span class="lbl">Injury</span></button>
+    <button class="evt-btn var" onclick="openModal('VAR Review')"><i class="ti ti-device-tv ico"></i><span class="lbl">VAR</span></button>
     <button class="evt-btn note" onclick="openModal('Referee Note')"><i class="ti ti-notes ico"></i><span class="lbl">Note</span></button>
   </div>
 
@@ -278,6 +301,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
           <button class="tab-btn" id="tab-missed" onclick="setTab('missed')">Missed <span class="tab-count" id="count-missed">0</span></button>
           <button class="tab-btn" id="tab-cmi" onclick="setTab('cmi')">CMI <span class="tab-count" id="count-cmi">0</span></button>
           <button class="tab-btn" id="tab-cre" onclick="setTab('cre')">CRE <span class="tab-count" id="count-cre">0</span></button>
+          <button class="tab-btn" id="tab-review" onclick="setTab('review')">Review <span class="tab-count" id="count-review">0</span></button>
         </div>
         <div class="type-filter-row" id="type-filter-row"></div>
         <div class="official-filter-row" id="official-filter-row" style="display:none">
@@ -344,6 +368,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
       <label>Penalty kick result</label>
       <select id="shootout-result"><option value="">— select —</option><option>Scored</option><option>Missed</option><option>Saved</option></select>
     </div>
+    <div id="also-foul-wrap" style="display:none">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+        <input type="checkbox" id="also-foul-check" style="width:auto;margin:0;" />
+        <span>Also a foul</span>
+      </label>
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+      <input type="checkbox" id="review-later-check" style="width:auto;margin:0;" />
+      <span>⚑ Mark for review</span>
+    </label>
     <label>Notes</label>
     <textarea id="modal-notes" placeholder="Describe the incident…"></textarea>
     <hr class="modal-divider">
@@ -382,9 +416,41 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
       <input type="checkbox" id="clock-counts-up" style="width:auto;margin:0;" checked />
       <span style="font-size:12px;color:#555;">Clock counts up</span>
     </label>
-    <div class="modal-btns">
+    <div class="modal-btns" style="flex-wrap:wrap;">
       <button class="btn-cancel" onclick="closePeriodModal()">Cancel</button>
+      <button class="btn-cancel" onclick="closePeriodModal();openNewMatchModal()">New match</button>
       <button class="btn-save" onclick="startNextPeriod()">Start period</button>
+    </div>
+  </div>
+</div>
+
+<!-- New match setup modal -->
+<div class="modal-bg" id="new-match-modal-bg">
+  <div class="modal" style="width:420px;">
+    <h3>New Match</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><label>Date</label><input type="date" id="nm-date" /></div>
+      <div><label>Kick-off time</label><input type="time" id="nm-time" /></div>
+    </div>
+    <label>Venue</label><input id="nm-venue" placeholder="Stadium / field" />
+    <label>Competition</label><input id="nm-competition" placeholder="League, cup, etc." />
+    <label>Age group</label><input id="nm-agegroup" placeholder="e.g. U12, U16, Senior" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><label>Home Team</label><input id="nm-home" placeholder="Home Team" /></div>
+      <div><label>Away Team</label><input id="nm-away" placeholder="Away Team" /></div>
+    </div>
+    <p style="font-size:11px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Officials</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
+      <div><label>Referee</label><input id="nm-ref" placeholder="Name" /></div>
+      <div><label>4th Official</label><input id="nm-4th" placeholder="Name" /></div>
+      <div><label>AR1</label><input id="nm-ar1" placeholder="Name" /></div>
+      <div><label>AR2</label><input id="nm-ar2" placeholder="Name" /></div>
+    </div>
+    <label>Half length (minutes)</label>
+    <input type="number" id="nm-halflength" value="45" min="1" max="120" style="margin-bottom:9px;" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeNewMatchModal()">Cancel</button>
+      <button class="btn-save" onclick="startNewMatch()">Start match</button>
     </div>
   </div>
 </div>
@@ -428,13 +494,42 @@ function liveGlobalElapsed(){
   return globalElapsedBase + Math.floor((Date.now()-clockStartWall)/1000);
 }
 
+function stoppageClockStr(totalSecs, periodLengthMins){
+  // Show MM+SS:ss once the period's regulation time is exceeded
+  if(!periodLengthMins || periodLengthMins<=0) return clockStr(totalSecs);
+  let regulated = periodLengthMins * 60;
+  if(totalSecs <= regulated) return clockStr(totalSecs);
+  let baseMins = periodLengthMins;
+  let extra = totalSecs - regulated;
+  return baseMins + '+' + pad(Math.floor(extra/60)) + ':' + pad(extra%60);
+}
+
 function updateClockDisplay(){
   let p=currentPeriod();
   if(!p){document.getElementById('clock').textContent='00:00';document.getElementById('clock-period').textContent='Not started';return;}
   let secs=livePeriodElapsed();
   let disp;
-  if(p.countsUp){disp=clockStr(p.startOffset+secs);}
-  else{let r=Math.max(0,p.length*60-secs);disp=clockStr(r);}
+  if(p.countsUp){
+    let total=p.startOffset+secs;
+    // For halves and ET, show stoppage time format once over period length
+    if((p.type==='half'||p.type==='et') && p.length>0){
+      disp=stoppageClockStr(total, p.length + (p.type==='half'?0: (periods.filter(x=>x.type==='half')[0]?.length||0)));
+      // Actually: stoppage relative to this period's own start + length
+      let periodStart = p.startOffset;
+      let elapsed = secs;
+      let regulated = p.length * 60;
+      if(elapsed > regulated){
+        let extra = elapsed - regulated;
+        disp = p.length + '+' + pad(Math.floor(extra/60)) + ':' + pad(extra%60);
+      } else {
+        disp = clockStr(p.startOffset + secs);
+      }
+    } else {
+      disp=clockStr(total);
+    }
+  } else {
+    let r=Math.max(0,p.length*60-secs);disp=clockStr(r);
+  }
   document.getElementById('clock').textContent=disp;
   document.getElementById('clock-period').textContent=p.name;
 }
@@ -491,7 +586,16 @@ function openNextPeriod(){
   document.getElementById('period-name-input').value='';
   document.getElementById('period-name-wrap').style.display='none';
   document.getElementById('period-length-wrap').style.display='block';
-  document.querySelectorAll('.pt-opt').forEach(o=>o.classList.remove('selected'));
+  document.querySelectorAll('.pt-opt').forEach(o=>{
+    o.classList.remove('selected');
+    // Disable ET option if already at 2
+    if(o.dataset.type==='et'){
+      let atMax=etCount>=2;
+      o.style.opacity=atMax?'0.35':'';
+      o.style.pointerEvents=atMax?'none':'';
+      o.title=atMax?'Maximum 2 extra time periods reached':'';
+    }
+  });
   document.querySelector('.pt-opt[data-type="'+typeDefault+'"]').classList.add('selected');
   selectedPeriodType=typeDefault;
   document.getElementById('period-modal-title').textContent=periods.length===0?'Start Match':'Next Period';
@@ -602,6 +706,8 @@ function openModal(type,isMissed){
   ['modal-player','modal-notes'].forEach(id=>document.getElementById(id).value='');
   ['modal-decision','modal-impact','missed-card-type','missed-offside-type','shootout-result'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('incorrect-decision-check').checked=false;
+  document.getElementById('also-foul-check').checked=false;
+  document.getElementById('review-later-check').checked=false;
   document.getElementById('team-label').textContent=getTeamLabel(type);
   document.getElementById('missed-banner').style.display=isMissed?'flex':'none';
   document.getElementById('btn-save-main').className='btn-save'+(isMissed?' missed-save':'');
@@ -611,6 +717,7 @@ function openModal(type,isMissed){
   const decTypes=['Foul','Yellow Card','Red Card','Penalty','Offside','VAR Review','Missed Foul','Missed Card','Missed Offside','Missed Goal'];
   document.getElementById('decision-wrap').style.display=decTypes.includes(type)?'block':'none';
   document.getElementById('incorrect-decision-wrap').style.display=['Corner Kick','Goal Kick'].includes(type)?'block':'none';
+  document.getElementById('also-foul-wrap').style.display=['Yellow Card','Red Card'].includes(type)?'block':'none';
   document.getElementById('shootout-result-wrap').style.display=isShootout()?'block':'none';
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
@@ -629,6 +736,8 @@ function saveEvent(){
   let missedOffsideType=document.getElementById('missed-offside-type').value;
   let incorrectDecision=document.getElementById('incorrect-decision-check').checked;
   let shootoutResult=document.getElementById('shootout-result').value;
+  let alsoFoul=document.getElementById('also-foul-check').checked;
+  let reviewLater=document.getElementById('review-later-check').checked;
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   let teamName=selectedTeam==='home'?hn:an;
   let officials=Array.from(modalSelectedOfficials);
@@ -636,7 +745,7 @@ function saveEvent(){
   let displaySecs=p?(p.startOffset+livePeriodElapsed()):0;
   let dispMin=Math.floor(displaySecs/60);
   let dispSec=displaySecs%60;
-  let ev={id:Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:selectedTeam,teamName,player,notes,decision,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,officials,minute:dispMin,second:dispSec,periodName:p?p.name:'',globalSec:liveGlobalElapsed()};
+  let ev={id:Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:selectedTeam,teamName,player,notes,decision,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,alsoFoul,reviewLater,officials,minute:dispMin,second:dispSec,periodName:p?p.name:'',globalSec:liveGlobalElapsed()};
   events.unshift(ev);
   if(currentEventType==='Goal'){if(selectedTeam==='home')homeScore++;else awayScore++;document.getElementById('home-score').textContent=homeScore;document.getElementById('away-score').textContent=awayScore;}
   if(currentEventType==='Penalty'&&isShootout()){if(selectedTeam==='home')homePens++;else awayPens++;document.getElementById('home-pens').textContent=homePens;document.getElementById('away-pens').textContent=awayPens;}
@@ -649,7 +758,7 @@ function updateStats(){
   document.getElementById('stat-fouls').textContent=f.filter(e=>e.type==='Foul').length;
   document.getElementById('stat-yellows').textContent=f.filter(e=>e.type==='Yellow Card').length;
   document.getElementById('stat-reds').textContent=f.filter(e=>e.type==='Red Card').length;
-  let mc=events.filter(e=>e.missed).length,cmic=events.filter(e=>e.cmi).length,crec=events.filter(e=>e.cre).length;
+  let mc=events.filter(e=>e.missed).length,cmic=events.filter(e=>e.cmi).length,crec=events.filter(e=>e.cre).length,rc=events.filter(e=>e.reviewLater).length;
   document.getElementById('stat-missed').textContent=mc;
   document.getElementById('stat-cmi').textContent=cmic;
   document.getElementById('stat-cre').textContent=crec;
@@ -657,11 +766,12 @@ function updateStats(){
   let cm=document.getElementById('count-missed');cm.textContent=mc;cm.className='tab-count'+(mc>0?' has-missed':'');
   let cc=document.getElementById('count-cmi');cc.textContent=cmic;cc.className='tab-count'+(cmic>0?' has-cmi':'');
   let cr=document.getElementById('count-cre');cr.textContent=crec;cr.className='tab-count'+(crec>0?' has-cre':'');
+  let rv=document.getElementById('count-review');if(rv){rv.textContent=rc;rv.className='tab-count'+(rc>0?' has-review':'');}
 }
 
 function setStatsTeam(t){statsTeam=t;['all','home','away'].forEach(x=>document.getElementById('stt-'+x).className='stt-btn'+(t===x?' active':''));updateStats();}
 
-function setTab(t){activeTab=t;['all','missed','cmi','cre'].forEach(tab=>document.getElementById('tab-'+tab).className='tab-btn'+(t===tab?' active':''));renderLog();}
+function setTab(t){activeTab=t;['all','missed','cmi','cre','review'].forEach(tab=>document.getElementById('tab-'+tab).className='tab-btn'+(t===tab?' active':''));renderLog();}
 
 function setOfficialFilter(val){
   activeOfficialFilter=val;
@@ -701,6 +811,7 @@ function renderLog(){
   if(activeTab==='missed')filtered=filtered.filter(e=>e.missed);
   else if(activeTab==='cmi')filtered=filtered.filter(e=>e.cmi);
   else if(activeTab==='cre')filtered=filtered.filter(e=>e.cre);
+  else if(activeTab==='review')filtered=filtered.filter(e=>e.reviewLater);
   if(activeTypeFilters.size>0)filtered=filtered.filter(e=>activeTypeFilters.has(e.type));
   if(activeOfficialFilter==='none'){filtered=filtered.filter(e=>!e.officials||e.officials.length===0);}
   else if(activeOfficialFilter!=='all'){filtered=filtered.filter(e=>e.officials&&e.officials.includes(activeOfficialFilter));}
@@ -771,6 +882,73 @@ function copyForEval(){navigator.clipboard.writeText('Generate a detailed refere
 
 document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('period-modal-bg').addEventListener('click',function(e){if(e.target===this)closePeriodModal();});
+document.getElementById('new-match-modal-bg').addEventListener('click',function(e){if(e.target===this)closeNewMatchModal();});
+
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  document.getElementById('dark-btn').textContent=document.body.classList.contains('dark')?'☀️':'🌙';
+  try{localStorage.setItem('referee_dark',document.body.classList.contains('dark')?'1':'0');}catch(e){}
+}
+// Restore dark preference
+try{if(localStorage.getItem('referee_dark')==='1'){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='☀️';}}catch(e){}
+
+function openNewMatchModal(){
+  // Pre-fill today's date
+  let today=new Date();
+  let yyyy=today.getFullYear(),mm=String(today.getMonth()+1).padStart(2,'0'),dd=String(today.getDate()).padStart(2,'0');
+  document.getElementById('nm-date').value=yyyy+'-'+mm+'-'+dd;
+  document.getElementById('nm-time').value='';
+  ['nm-venue','nm-competition','nm-agegroup','nm-home','nm-away','nm-ref','nm-4th','nm-ar1','nm-ar2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nm-halflength').value='45';
+  document.getElementById('new-match-modal-bg').classList.add('open');
+}
+function closeNewMatchModal(){document.getElementById('new-match-modal-bg').classList.remove('open');}
+
+function startNewMatch(){
+  // Clear localStorage and reset all state
+  try{localStorage.removeItem('referee_logger_v1');}catch(e){}
+  // Apply fields from modal before reload-equivalent reset
+  let date=document.getElementById('nm-date').value;
+  let time=document.getElementById('nm-time').value;
+  let venue=document.getElementById('nm-venue').value.trim();
+  let comp=document.getElementById('nm-competition').value.trim();
+  let age=document.getElementById('nm-agegroup').value.trim();
+  let hn=document.getElementById('nm-home').value.trim()||'Home';
+  let an=document.getElementById('nm-away').value.trim()||'Away';
+  let ref=document.getElementById('nm-ref').value.trim();
+  let fourth=document.getElementById('nm-4th').value.trim();
+  let ar1=document.getElementById('nm-ar1').value.trim();
+  let ar2=document.getElementById('nm-ar2').value.trim();
+  let hl=parseInt(document.getElementById('nm-halflength').value)||45;
+  window._newMatchHalfLength=hl;
+  // Reset all runtime state
+  events=[];periods=[];currentPeriodIdx=-1;
+  periodElapsedBase=0;globalElapsedBase=0;clockStartWall=null;
+  if(clockRunning){clearInterval(clockInterval);clockInterval=null;clockRunning=false;}
+  homeScore=0;awayScore=0;homePens=0;awayPens=0;
+  activeTab='all';activeTypeFilters=new Set();statsTeam='all';activeOfficialFilter='all';
+  // Set field values
+  let matchInfoStr=''+(date?date+' ':'')+( time?time+' ':'')+venue;
+  document.getElementById('match-info').value=matchInfoStr.trim();
+  document.getElementById('competition').value=comp+(age?' | '+age:'');
+  document.getElementById('home-name').value=hn;
+  document.getElementById('away-name').value=an;
+  document.getElementById('ref-name').value=ref;
+  document.getElementById('fourth-official').value=fourth;
+  document.getElementById('ar1-name').value=ar1;
+  document.getElementById('ar2-name').value=ar2;
+  document.getElementById('home-score').textContent=0;
+  document.getElementById('away-score').textContent=0;
+  document.getElementById('shootout-display').style.display='none';
+  closeNewMatchModal();
+  renderPeriodPills();
+  updateClockDisplay();
+  updateStats();
+  renderLog();
+  updateTypeFilterChips();
+  // Immediately open the period modal to start 1st half
+  setTimeout(openNextPeriod, 200);
+}
 
 // ── Local storage persistence ─────────────────────────────────────────────
 const LS_KEY='referee_logger_v1';
@@ -821,7 +999,9 @@ function loadState(){
       periodElapsedBase=s.periodElapsedBase||0;
       globalElapsedBase=s.globalElapsedBase||0;
     }
-    clockRunning=false; clockStartWall=null; // always reload paused; user taps play
+    // Remember whether to auto-restart after the DOM is ready
+    window._restoreClockRunning = !!(s.clockWasRunning && s.clockStartWall);
+    clockRunning=false; clockStartWall=null;
     if(s.fields){
       Object.entries(s.fields).forEach(([id,val])=>{
         let el=document.getElementById(id); if(el) el.value=val||'';
@@ -860,19 +1040,29 @@ _saveAfter.forEach(name=>{
 // ── Boot ─────────────────────────────────────────────────────────────────────
 if(loadState()){
   renderPeriodPills();
-  updateClockDisplay();
   updateStats();
   renderLog();
   updateTypeFilterChips();
+  if(window._restoreAutoStart && currentPeriodIdx>=0){
+    // Auto-restart clock
+    clockStartWall=Date.now();
+    clockRunning=true;
+    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';
+    document.getElementById('clock-btn').classList.add('active');
+    startClockInterval();
+  }
+  updateClockDisplay();
   // Brief restore toast
   let toast=document.createElement('div');
   toast.style.cssText='position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:12px;padding:8px 16px;border-radius:99px;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,0.3)';
-  toast.innerHTML='Match data restored \u2014 tap play to resume clock <button onclick="clearState()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;padding:2px 9px;border-radius:99px;cursor:pointer;margin-left:2px">New match</button>';
+  toast.innerHTML='Match restored'+(window._restoreAutoStart?' — clock running':'')+'<button onclick="clearState()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;padding:2px 9px;border-radius:99px;cursor:pointer;margin-left:4px">New match</button>';
   document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 6000);
+  setTimeout(()=>toast.remove(), 5000);
 } else {
   renderPeriodPills();
   updateClockDisplay();
+  // Show new match modal on first load
+  setTimeout(openNewMatchModal, 300);
 }
 </script>
 </body>
