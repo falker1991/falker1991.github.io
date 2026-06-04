@@ -771,7 +771,109 @@ function copyForEval(){navigator.clipboard.writeText('Generate a detailed refere
 
 document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('period-modal-bg').addEventListener('click',function(e){if(e.target===this)closePeriodModal();});
-renderPeriodPills();updateClockDisplay();
+
+// ── Local storage persistence ─────────────────────────────────────────────
+const LS_KEY='referee_logger_v1';
+
+function saveState(){
+  try{
+    let snap={
+      events,
+      periods,
+      currentPeriodIdx,
+      periodElapsedBase: livePeriodElapsed(),
+      globalElapsedBase: liveGlobalElapsed(),
+      clockWasRunning: clockRunning,
+      clockStartWall: clockRunning ? clockStartWall : null,
+      homeScore,awayScore,homePens,awayPens,
+      fields:{
+        'match-info':document.getElementById('match-info').value,
+        'competition':document.getElementById('competition').value,
+        'home-name':document.getElementById('home-name').value,
+        'away-name':document.getElementById('away-name').value,
+        'ref-name':document.getElementById('ref-name').value,
+        'ar1-name':document.getElementById('ar1-name').value,
+        'ar2-name':document.getElementById('ar2-name').value,
+        'fourth-official':document.getElementById('fourth-official').value,
+      },
+      savedAt: Date.now()
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(snap));
+  }catch(e){console.warn('saveState failed',e);}
+}
+
+function loadState(){
+  try{
+    let raw=localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    let s=JSON.parse(raw);
+    events=s.events||[];
+    periods=s.periods||[];
+    currentPeriodIdx=(s.currentPeriodIdx!=null)?s.currentPeriodIdx:-1;
+    homeScore=s.homeScore||0; awayScore=s.awayScore||0;
+    homePens=s.homePens||0;   awayPens=s.awayPens||0;
+    // Reconstruct elapsed — if clock was running when page closed, add the time since then
+    if(s.clockWasRunning && s.clockStartWall){
+      let extra=Math.floor((Date.now()-s.clockStartWall)/1000);
+      periodElapsedBase=(s.periodElapsedBase||0)+extra;
+      globalElapsedBase=(s.globalElapsedBase||0)+extra;
+    } else {
+      periodElapsedBase=s.periodElapsedBase||0;
+      globalElapsedBase=s.globalElapsedBase||0;
+    }
+    clockRunning=false; clockStartWall=null; // always reload paused; user taps play
+    if(s.fields){
+      Object.entries(s.fields).forEach(([id,val])=>{
+        let el=document.getElementById(id); if(el) el.value=val||'';
+      });
+    }
+    document.getElementById('home-score').textContent=homeScore;
+    document.getElementById('away-score').textContent=awayScore;
+    document.getElementById('home-pens').textContent=homePens;
+    document.getElementById('away-pens').textContent=awayPens;
+    if(periods.some(p=>p.type==='shootout'))
+      document.getElementById('shootout-display').style.display='flex';
+    return true;
+  }catch(e){console.warn('loadState failed',e); return false;}
+}
+
+function clearState(){
+  if(!confirm('Clear all match data and start a new match?')) return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+
+// Patch every mutating function to save after it runs
+const _saveAfter=['saveEvent','toggleEventFlag','deleteEvent','startNextPeriod','toggleClock'];
+_saveAfter.forEach(name=>{
+  let orig=window[name];
+  if(typeof orig==='function') window[name]=function(){orig.apply(this,arguments); saveState();};
+});
+
+// Auto-save on text field edits
+['match-info','competition','home-name','away-name','ref-name','ar1-name','ar2-name','fourth-official']
+  .forEach(id=>{
+    let el=document.getElementById(id);
+    if(el) el.addEventListener('input', saveState);
+  });
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+if(loadState()){
+  renderPeriodPills();
+  updateClockDisplay();
+  updateStats();
+  renderLog();
+  updateTypeFilterChips();
+  // Brief restore toast
+  let toast=document.createElement('div');
+  toast.style.cssText='position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:12px;padding:8px 16px;border-radius:99px;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,0.3)';
+  toast.innerHTML='Match data restored \u2014 tap play to resume clock <button onclick="clearState()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;padding:2px 9px;border-radius:99px;cursor:pointer;margin-left:2px">New match</button>';
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 6000);
+} else {
+  renderPeriodPills();
+  updateClockDisplay();
+}
 </script>
 </body>
 </html>
