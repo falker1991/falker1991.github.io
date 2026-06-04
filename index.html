@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Match Event Logger</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<style>
+:root {
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #555;
+  --color-text-tertiary: #888;
+  --color-background-primary: #fff;
+  --color-background-secondary: #f4f4f3;
+  --color-border-tertiary: #e0dfdb;
+  --color-border-secondary: #ccc;
+  --color-background-info: #E6F1FB;
+  --color-text-info: #185FA5;
+  --color-border-info: #185FA5;
+  --color-background-danger: #FCEBEB;
+  --color-text-danger: #791F1F;
+  --color-border-danger: #A32D2D;
+  --border-radius-md: 7px;
+  --border-radius-lg: 11px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); }
+input, select, textarea, button { font-family: inherit; }
+input, select, textarea { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 10px; background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--color-border-info); }
+.app { max-width: 700px; margin: 0 auto; padding: 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
+.header-left h2 { font-size: 18px; font-weight: 500; }
+.header-left p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+.clock-area { display: flex; align-items: center; gap: 8px; }
+.clock { font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; min-width: 68px; }
+.clock-period { font-size: 11px; color: var(--color-text-tertiary); text-align: center; }
+.clock-btn { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 10px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+.clock-btn:hover { background: var(--color-background-secondary); }
+.clock-btn.active { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
+.period-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+.period-pill { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); white-space: nowrap; }
+.period-pill.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.period-pill.done { opacity: 0.45; text-decoration: line-through; }
+.period-pill-add { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 0.5px dashed var(--color-border-secondary); background: transparent; color: var(--color-text-tertiary); cursor: pointer; }
+.period-pill-add:hover { color: var(--color-text-info); border-color: var(--color-border-info); }
+.match-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.officials-card { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 12px; margin-bottom: 1rem; }
+.officials-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 9px; font-size: 13px; font-weight: 500; }
+.officials-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.official-field { display: flex; flex-direction: column; gap: 3px; }
+.official-label { font-size: 10px; color: var(--color-text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; }
+.official-input { padding: 6px 9px; font-size: 12px; }
+.teams-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; margin-bottom: 1rem; align-items: center; }
+.team-input { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 8px 10px; font-size: 14px; font-weight: 500; width: 100%; text-align: center; }
+.score-area { text-align: center; }
+.score { font-size: 30px; font-weight: 500; letter-spacing: 2px; }
+.score-label { font-size: 11px; color: var(--color-text-tertiary); }
+.shootout-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 4px; font-size: 12px; color: var(--color-text-secondary); }
+.shootout-score { font-size: 15px; font-weight: 500; }
+/* Stats */
+.stats-section { margin-bottom: 1rem; }
+.stats-team-toggle { display: flex; gap: 4px; margin-bottom: 6px; }
+.stt-btn { font-size: 11px; padding: 3px 10px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; }
+.stt-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 7px; }
+.stats-row-2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 9px; text-align: center; }
+.stat-val { font-size: 18px; font-weight: 500; }
+.stat-lbl { font-size: 10px; color: var(--color-text-tertiary); margin-top: 1px; }
+.stat-card.danger { background: #FCEBEB; } .stat-card.danger .stat-val { color: #791F1F; } .stat-card.danger .stat-lbl { color: #A32D2D; }
+.stat-card.cmi-card { background: #FFF3CD; } .stat-card.cmi-card .stat-val { color: #7A5800; } .stat-card.cmi-card .stat-lbl { color: #7A5800; }
+.stat-card.cre-card { background: #F3E8FF; } .stat-card.cre-card .stat-val { color: #5B1FA5; } .stat-card.cre-card .stat-lbl { color: #5B1FA5; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.event-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 7px; margin-bottom: 0.85rem; }
+.evt-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 9px 7px; cursor: pointer; background: var(--color-background-primary); display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.15s; position: relative; }
+.evt-btn:hover { transform: translateY(-1px); filter: brightness(0.96); }
+.evt-btn .ico { font-size: 17px; }
+.evt-btn .lbl { font-size: 10px; color: var(--color-text-secondary); text-align: center; line-height: 1.3; }
+.evt-btn.goal { border-color: #639922; background: #EAF3DE; } .evt-btn.goal .ico { color: #3B6D11; }
+.evt-btn.yellow { border-color: #BA7517; background: #FAEEDA; } .evt-btn.yellow .ico { color: #e6ff06; }
+.evt-btn.red { border-color: #A32D2D; background: #FCEBEB; } .evt-btn.red .ico { color: #ff0000; }
+.evt-btn.foul { border-color: #185FA5; background: #E6F1FB; } .evt-btn.foul .ico { color: #0C447C; }
+.evt-btn.sub { border-color: #533AB7; background: #EEEDFE; } .evt-btn.sub .ico { color: #3C3489; }
+.evt-btn.injury { border-color: #D85A30; background: #FAECE7; } .evt-btn.injury .ico { color: #993C1D; }
+.evt-btn.offside { border-color: #888780; background: #F1EFE8; } .evt-btn.offside .ico { color: #444441; }
+.evt-btn.var { border-color: #185FA5; background: #E6F1FB; } .evt-btn.var .ico { color: #0C447C; }
+.evt-btn.corner { border-color: #0F6E56; background: #E1F5EE; } .evt-btn.corner .ico { color: #085041; }
+.evt-btn.goalkick { border-color: #0F6E56; background: #E1F5EE; } .evt-btn.goalkick .ico { color: #085041; }
+.evt-btn.penalty { border-color: #993556; background: #FBEAF0; } .evt-btn.penalty .ico { color: #72243E; }
+.evt-btn.save { border-color: #3B6D11; background: #EAF3DE; } .evt-btn.save .ico { color: #27500A; }
+.evt-btn.note { border-color: #5F5E5A; background: #F1EFE8; } .evt-btn.note .ico { color: #2C2C2A; }
+.missed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 1rem; }
+.evt-btn.missed { border-style: dashed; border-width: 1.5px; }
+.evt-btn.missed-foul { border-color: #A32D2D; background: #FFF5F5; } .evt-btn.missed-foul .ico { color: #A32D2D; }
+.evt-btn.missed-yellow-card { border-color: #854F0B; background: #FFFAF5; } .evt-btn.missed-yellow-card .ico { color: #BA7517; }
+.evt-btn.missed-red-card { border-color: #854F0B; background: #FFFAF5; } .evt-btn.missed-red-card .ico { color: #ff0000; }
+.evt-btn.missed-offside { border-color: #555452; background: #F8F7F4; } .evt-btn.missed-offside .ico { color: #555452; }
+.evt-btn.missed-goal { border-color: #639922; background: #F5FFF0; } .evt-btn.missed-goal .ico { color: #3B6D11; }
+.missed-badge { position: absolute; top: 3px; right: 3px; font-size: 8px; font-weight: 700; color: #A32D2D; background: #FCEBEB; border-radius: 99px; padding: 1px 4px; border: 0.5px solid #A32D2D; line-height: 1.4; }
+/* Modal */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal, .clock-modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.1rem; width: 380px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
+.clock-modal { width: 320px; }
+.modal h3, .clock-modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 0.9rem; }
+.modal-missed-banner { background: #FFF5F5; border: 0.5px solid #A32D2D; border-radius: var(--border-radius-md); padding: 6px 9px; font-size: 12px; color: #791F1F; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+.modal label, .clock-modal label { font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 3px; }
+.modal input, .modal select, .modal textarea, .clock-modal input, .clock-modal select { width: 100%; margin-bottom: 9px; font-size: 13px; }
+.modal textarea { height: 52px; resize: vertical; }
+.modal-btns { display: flex; gap: 7px; justify-content: flex-end; margin-top: 5px; }
+.btn-cancel { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 13px; cursor: pointer; font-size: 12px; color: var(--color-text-secondary); }
+.btn-save { background: var(--color-background-info); color: var(--color-text-info); border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); padding: 6px 13px; cursor: pointer; font-size: 12px; font-weight: 500; }
+.btn-save.missed-save { background: #FCEBEB; color: #791F1F; border-color: #A32D2D; }
+.team-select { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+.team-opt { padding: 7px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; text-align: center; font-size: 12px; color: var(--color-text-secondary); }
+.team-opt.selected { border-color: var(--color-border-info); background: var(--color-background-info); color: var(--color-text-info); }
+.officials-chips { display: flex; gap: 5px; margin-bottom: 9px; flex-wrap: wrap; }
+.official-chip { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 4px 13px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.12s; user-select: none; }
+.official-chip.selected { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+.flag-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+.flag-toggle { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 9px; cursor: pointer; background: var(--color-background-secondary); text-align: center; }
+.flag-toggle .flag-title { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); }
+.flag-toggle .flag-desc { font-size: 10px; color: var(--color-text-tertiary); margin-top: 1px; }
+.flag-toggle.on-cmi { background: #FFF3CD; border-color: #C49A00; } .flag-toggle.on-cmi .flag-title { color: #7A5800; }
+.flag-toggle.on-cre { background: #F3E8FF; border-color: #8B3FC8; } .flag-toggle.on-cre .flag-title { color: #5B1FA5; }
+.modal-divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 9px 0; }
+.period-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.pt-opt { padding: 7px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; text-align: center; font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); }
+.pt-opt.selected { border-color: var(--color-border-info); background: var(--color-background-info); color: var(--color-text-info); }
+/* Log */
+.log-section { margin-top: 0.5rem; }
+.log-controls { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.log-filters { flex: 1; min-width: 0; }
+.tab-bar { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); flex-wrap: wrap; margin-bottom: 6px; }
+.tab-btn { background: transparent; border: none; padding: 6px 10px; font-size: 11px; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tab-btn.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 500; }
+.tab-btn .tab-count { display: inline-block; font-size: 9px; background: var(--color-background-secondary); border-radius: 99px; padding: 1px 4px; margin-left: 3px; color: var(--color-text-tertiary); }
+.tab-btn .tab-count.has-missed { background: #FCEBEB; color: #791F1F; }
+.tab-btn .tab-count.has-cmi { background: #FFF3CD; color: #7A5800; }
+.tab-btn .tab-count.has-cre { background: #F3E8FF; color: #5B1FA5; }
+.type-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.type-chip { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
+.type-chip.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.official-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; align-items: center; }
+.official-filter-label { font-size: 10px; color: var(--color-text-tertiary); margin-right: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+.off-chip { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
+.off-chip.active { background: #E6F1FB; color: #185FA5; border-color: #185FA5; }
+.off-chip.all-chip.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 400; }
+.log-empty { text-align: center; padding: 1.5rem; font-size: 13px; color: var(--color-text-tertiary); border: 0.5px dashed var(--color-border-tertiary); border-radius: var(--border-radius-md); }
+.event-item { display: flex; align-items: flex-start; gap: 7px; padding: 8px 9px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); margin-bottom: 5px; }
+.event-item.missed-item { border-color: #F7C1C1; border-style: dashed; background: #FFFAFA; }
+.event-item.cmi-item { border-color: #C49A00; background: #FFFDF0; }
+.event-item.cre-item { border-color: #8B3FC8; background: #FAF5FF; }
+.event-min { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); min-width: 42px; font-variant-numeric: tabular-nums; font-family: monospace, monospace; }
+.event-body { flex: 1; min-width: 0; }
+.event-type-row { font-size: 12px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
+.event-detail { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; word-break: break-word; }
+.event-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; align-items: center; }
+.event-team-tag { font-size: 10px; padding: 1px 6px; border-radius: var(--border-radius-md); }
+.tag-home { background: #E6F1FB; color: #185FA5; }
+.tag-away { background: #FAEEDA; color: #854F0B; }
+.tag-missed { background: #FCEBEB; color: #791F1F; }
+.tag-cmi { background: #FFF3CD; color: #7A5800; border: 0.5px solid #C49A00; font-weight: 600; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
+.tag-cre { background: #F3E8FF; color: #5B1FA5; border: 0.5px solid #8B3FC8; font-weight: 600; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
+.tag-official { background: #E6F1FB; color: #185FA5; border: 0.5px solid #185FA5; font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 99px; }
+.tag-incorrect { background: #FCEBEB; color: #791F1F; border: 0.5px solid #A32D2D; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
+.half-tag { font-size: 10px; color: var(--color-text-tertiary); }
+.event-actions { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+.action-flag-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 5px; font-size: 9px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-tertiary); line-height: 1.3; white-space: nowrap; }
+.action-flag-btn.active-cmi { background: #FFF3CD; color: #7A5800; border-color: #C49A00; }
+.action-flag-btn.active-cre { background: #F3E8FF; color: #5B1FA5; border-color: #8B3FC8; }
+.action-officials-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-tertiary); line-height: 1.3; white-space: nowrap; }
+.action-officials-btn.has-officials { background: #E6F1FB; color: #185FA5; border-color: #185FA5; }
+.del-btn { background: transparent; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 12px; padding: 1px; }
+.del-btn:hover { color: #A32D2D; }
+.log-btns { display: flex; gap: 6px; padding-bottom: 8px; flex-shrink: 0; }
+.export-btn { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 10px; font-size: 12px; cursor: pointer; color: var(--color-text-secondary); }
+.export-btn:hover { background: var(--color-background-secondary); }
+/* Popover */
+.officials-popover-bg { display: none; position: fixed; inset: 0; z-index: 200; }
+.officials-popover-bg.open { display: block; }
+.officials-popover { position: fixed; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 11px; width: 190px; z-index: 201; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.officials-popover h4 { font-size: 12px; font-weight: 500; margin-bottom: 7px; }
+.popover-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.popover-chip { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 3px 10px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.popover-chip.selected { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+.popover-done { width: 100%; padding: 5px; font-size: 11px; border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); background: var(--color-background-info); color: var(--color-text-info); cursor: pointer; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-left"><h2>Falk Match Logger</h2><p>Mentoring Assistant</p></div>
+    <div class="clock-area">
+      <div>
+        <div class="clock" id="clock">00:00</div>
+        <div class="clock-period" id="clock-period">Not started</div>
+      </div>
+      <button class="clock-btn" id="clock-btn" onclick="toggleClock()"><i class="ti ti-player-play"></i></button>
+      <button class="clock-btn" onclick="openNextPeriod()" title="Next period">⏭</button>
+    </div>
+  </div>
+
+  <div class="period-row" id="period-row"></div>
+
+  <div class="match-info-row">
+    <input placeholder="Match date" id="match-date" style="font-size:12px;" />
+    <input placeholder="Match time" id="match-time" style="font-size:12px;" />
+    <input placeholder="Venue" id="match-venue" style="font-size:12px;" />
+    <input placeholder="Competition / league" id="competition" style="font-size:12px;" />
+    <input placeholder="Age Group" id="match-age" style="font-size:12px;" />
+  </div>
+
+  <div class="officials-card">
+    <div class="officials-card-header"><i class="ti ti-whistle" style="font-size:15px;color:#888"></i>Match officials</div>
+    <div class="officials-grid">
+      <div class="official-field"><span class="official-label">Referee (CR)</span><input class="official-input" id="ref-name" placeholder="Name" /></div>
+      <div class="official-field"><span class="official-label">Fourth Official</span><input class="official-input" id="fourth-official" placeholder="Name" /></div>
+      <div class="official-field"><span class="official-label">Assistant Referee 1</span><input class="official-input" id="ar1-name" placeholder="Name" /></div>
+      <div class="official-field"><span class="official-label">Assistant Referee 2</span><input class="official-input" id="ar2-name" placeholder="Name" /></div>
+    </div>
+  </div>
+
+  <div class="teams-row">
+    <input class="team-input" id="home-name" placeholder="Home Team" value="Home" />
+    <div class="score-area">
+      <div class="score"><span id="home-score">0</span> – <span id="away-score">0</span></div>
+      <div class="score-label">score</div>
+      <div class="shootout-row" id="shootout-display" style="display:none">
+        Pens: <span class="shootout-score" id="home-pens">0</span> – <span class="shootout-score" id="away-pens">0</span>
+      </div>
+    </div>
+    <input class="team-input" id="away-name" placeholder="Away Team" value="Away" />
+  </div>
+
+  <div class="stats-section">
+    <div class="stats-team-toggle">
+      <button class="stt-btn active" id="stt-all" onclick="setStatsTeam('all')">Both teams</button>
+      <button class="stt-btn" id="stt-home" onclick="setStatsTeam('home')">Home</button>
+      <button class="stt-btn" id="stt-away" onclick="setStatsTeam('away')">Away</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="stat-fouls">0</div><div class="stat-lbl">Fouls</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-yellows">0</div><div class="stat-lbl">Yellows</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-reds">0</div><div class="stat-lbl">Reds</div></div>
+    </div>
+    <div class="stats-row-2">
+      <div class="stat-card danger"><div class="stat-val" id="stat-missed">0</div><div class="stat-lbl">Missed calls</div></div>
+      <div class="stat-card cmi-card"><div class="stat-val" id="stat-cmi">0</div><div class="stat-lbl">CMI</div></div>
+      <div class="stat-card cre-card"><div class="stat-val" id="stat-cre">0</div><div class="stat-lbl">CRE</div></div>
+    </div>
+  </div>
+
+  <p class="section-label">Log an event</p>
+  <div class="event-grid">
+    <button class="evt-btn goal" onclick="openModal('Goal')"><i class="ti ti-ball-football ico"></i><span class="lbl">Goal</span></button>
+    <button class="evt-btn foul" onclick="openModal('Foul')"><i class="ti ti-alert-triangle ico"></i><span class="lbl">Foul</span></button>
+    <button class="evt-btn penalty" onclick="openModal('Penalty')"><i class="ti ti-circle-dot ico"></i><span class="lbl">Penalty</span></button>
+    <button class="evt-btn yellow" onclick="openModal('Yellow Card')"><i class="ti ti-square ico" style="color:#BA7517"></i><span class="lbl">Yellow Card</span></button>
+    <button class="evt-btn red" onclick="openModal('Red Card')"><i class="ti ti-square ico"></i><span class="lbl">Red Card</span></button>
+    <button class="evt-btn offside" onclick="openModal('Offside')"><i class="ti ti-flag ico"></i><span class="lbl">Offside</span></button>
+    <button class="evt-btn goalkick" onclick="openModal('Goal Kick')"><i class="ti ti-arrow-back-up ico"></i><span class="lbl">Goal Kick</span></button>
+    <button class="evt-btn corner" onclick="openModal('Corner Kick')"><i class="ti ti-corner-up-right ico"></i><span class="lbl">Corner Kick</span></button>
+    <button class="evt-btn sub" onclick="openModal('Substitution')"><i class="ti ti-arrows-exchange ico"></i><span class="lbl">Sub</span></button>
+    <button class="evt-btn injury" onclick="openModal('Injury')"><i class="ti ti-first-aid-kit ico"></i><span class="lbl">Injury</span></button>
+    <button class="evt-btn note" onclick="openModal('Referee Note')"><i class="ti ti-notes ico"></i><span class="lbl">Note</span></button>
+  </div>
+
+  <p class="section-label" style="margin-bottom:6px;">Missed calls</p>
+  <div class="missed-grid">
+    <button class="evt-btn missed missed-foul" onclick="openModal('Missed Foul',true)"><span class="missed-badge">MISSED</span><i class="ti ti-alert-triangle ico"></i><span class="lbl">Missed Foul</span></button>
+    <button class="evt-btn missed missed-yellow-card" onclick="openModal('Missed Yellow Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico"></i><span class="lbl">Missed Yellow Card</span></button>
+    <button class="evt-btn missed missed-red-card" onclick="openModal('Missed Red Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico"></i><span class="lbl">Missed Red Card</span></button>
+    <button class="evt-btn missed missed-offside" onclick="openModal('Missed Offside',true)"><span class="missed-badge">MISSED</span><i class="ti ti-flag ico"></i><span class="lbl">Missed Offside</span></button>
+    <button class="evt-btn missed missed-goal" onclick="openModal('Missed Goal',true)"><span class="missed-badge">MISSED</span><i class="ti ti-ball-football ico"></i><span class="lbl">Missed Goal</span></button>
+  </div>
+
+  <div class="log-section">
+    <div class="log-controls">
+      <div class="log-filters">
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-all" onclick="setTab('all')">All <span class="tab-count" id="count-all">0</span></button>
+          <button class="tab-btn" id="tab-missed" onclick="setTab('missed')">Missed <span class="tab-count" id="count-missed">0</span></button>
+          <button class="tab-btn" id="tab-cmi" onclick="setTab('cmi')">CMI <span class="tab-count" id="count-cmi">0</span></button>
+          <button class="tab-btn" id="tab-cre" onclick="setTab('cre')">CRE <span class="tab-count" id="count-cre">0</span></button>
+        </div>
+        <div class="type-filter-row" id="type-filter-row"></div>
+        <div class="official-filter-row" id="official-filter-row" style="display:none">
+          <span class="official-filter-label">Official:</span>
+          <span class="off-chip all-chip active" id="off-chip-all" onclick="setOfficialFilter('all')">All</span>
+          <span class="off-chip" id="off-chip-CR" onclick="setOfficialFilter('CR')">CR</span>
+          <span class="off-chip" id="off-chip-AR1" onclick="setOfficialFilter('AR1')">AR1</span>
+          <span class="off-chip" id="off-chip-AR2" onclick="setOfficialFilter('AR2')">AR2</span>
+          <span class="off-chip" id="off-chip-4th" onclick="setOfficialFilter('4th')">4th</span>
+          <span class="off-chip" id="off-chip-none" onclick="setOfficialFilter('none')" style="font-style:italic;font-weight:400">Unassigned</span>
+        </div>
+      </div>
+      <div class="log-btns">
+        <button class="export-btn" onclick="exportLog()"><i class="ti ti-download"></i></button>
+        <button class="export-btn" onclick="copyForEval()">Evaluate ↗</button>
+      </div>
+    </div>
+    <div id="event-log"><div class="log-empty">No events logged yet</div></div>
+  </div>
+</div>
+
+<!-- Event modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="modal-title">Log Event</h3>
+    <div id="missed-banner" class="modal-missed-banner" style="display:none"><i class="ti ti-alert-circle"></i><span>Logging a <strong>missed call</strong>.</span></div>
+    <label id="team-label">Team</label>
+    <div class="team-select">
+      <div class="team-opt selected" id="opt-home" onclick="selectTeam('home')">Home</div>
+      <div class="team-opt" id="opt-away" onclick="selectTeam('away')">Away</div>
+    </div>
+    <label>Player (name or #)</label>
+    <input id="modal-player" placeholder="e.g. #10 or Müller" />
+    <label>Officials involved <span style="font-size:10px;color:#888;font-weight:400">(select all that apply)</span></label>
+    <div class="officials-chips" id="modal-officials-chips">
+      <span class="official-chip" data-pos="CR" onclick="toggleModalOfficial(this)">CR</span>
+      <span class="official-chip" data-pos="AR1" onclick="toggleModalOfficial(this)">AR1</span>
+      <span class="official-chip" data-pos="AR2" onclick="toggleModalOfficial(this)">AR2</span>
+      <span class="official-chip" data-pos="4th" onclick="toggleModalOfficial(this)">4th</span>
+    </div>
+    <div id="missed-card-type-wrap" style="display:none">
+      <label>Card that should have been shown</label>
+      <select id="missed-card-type"><option value="">— select —</option><option>Yellow Card</option><option>Red Card</option><option>Second Yellow (Red)</option></select>
+    </div>
+    <div id="missed-offside-type-wrap" style="display:none">
+      <label>Offside situation</label>
+      <select id="missed-offside-type"><option value="">— select —</option><option>Player was offside — not called</option><option>Player was onside — incorrectly called offside</option></select>
+    </div>
+    <div id="impact-wrap" style="display:none">
+      <label>Impact on game</label>
+      <select id="modal-impact"><option value="">— select —</option><option>No impact on result</option><option>Minor impact</option><option>Significant impact</option><option>Decisive / changed outcome</option></select>
+    </div>
+    <div id="decision-wrap" style="display:none">
+      <label>Decision quality</label>
+      <select id="modal-decision"><option value="">— select —</option><option>Correct — routine</option><option>Correct — difficult</option><option>Incorrect — routine</option><option>Incorrect — difficult</option><option>Incorrect — impossible</option><option>N/A</option></select>
+    </div>
+    <div id="incorrect-decision-wrap" style="display:none">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+        <input type="checkbox" id="incorrect-decision-check" style="width:auto;margin:0;" />
+        <span>Decision was incorrect</span>
+      </label>
+    </div>
+    <div id="shootout-result-wrap" style="display:none">
+      <label>Penalty kick result</label>
+      <select id="shootout-result"><option value="">— select —</option><option>Scored</option><option>Missed</option><option>Saved</option></select>
+    </div>
+    <label>Notes</label>
+    <textarea id="modal-notes" placeholder="Describe the incident…"></textarea>
+    <hr class="modal-divider">
+    <label style="margin-bottom:5px;">Flag this incident</label>
+    <div class="flag-toggle-row">
+      <div class="flag-toggle" id="toggle-cmi" onclick="toggleFlag('cmi')"><div class="flag-title">CMI</div><div class="flag-desc">Critical Match Incident</div></div>
+      <div class="flag-toggle" id="toggle-cre" onclick="toggleFlag('cre')"><div class="flag-title">CRE</div><div class="flag-desc">Clear Refereeing Error</div></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="btn-save-main" onclick="saveEvent()">Save event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Period setup modal -->
+<div class="modal-bg" id="period-modal-bg">
+  <div class="clock-modal">
+    <h3 id="period-modal-title">Start Period</h3>
+    <label>Period type</label>
+    <div class="period-type-row">
+      <div class="pt-opt selected" data-type="half" onclick="selectPeriodType(this)">Half</div>
+      <div class="pt-opt" data-type="et" onclick="selectPeriodType(this)">Extra Time</div>
+      <div class="pt-opt" data-type="shootout" onclick="selectPeriodType(this)">Shootout</div>
+      <div class="pt-opt" data-type="custom" onclick="selectPeriodType(this)">Custom</div>
+    </div>
+    <div id="period-length-wrap">
+      <label>Period length (minutes)</label>
+      <input type="number" id="period-length-input" value="45" min="1" max="120" />
+    </div>
+    <div id="period-name-wrap" style="display:none">
+      <label>Period name</label>
+      <input id="period-name-input" placeholder="e.g. Extra Time 1st Half" />
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+      <input type="checkbox" id="clock-counts-up" style="width:auto;margin:0;" checked />
+      <span style="font-size:12px;color:#555;">Clock counts up</span>
+    </label>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePeriodModal()">Cancel</button>
+      <button class="btn-save" onclick="startNextPeriod()">Start period</button>
+    </div>
+  </div>
+</div>
+
+<!-- Officials popover -->
+<div class="officials-popover-bg" id="popover-bg" onclick="closePopover()"></div>
+<div class="officials-popover" id="officials-popover" style="display:none">
+  <h4>Officials involved</h4>
+  <div class="popover-chips" id="popover-chips"></div>
+  <button class="popover-done" onclick="closePopover()">Done</button>
+</div>
+
+<script>
+const OFFICIALS=[{id:'CR',label:'CR'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
+
+let clockRunning=false,clockInterval=null;
+let periods=[];
+let currentPeriodIdx=-1;
+let periodElapsed=0;
+let globalElapsed=0;
+let homeScore=0,awayScore=0,homePens=0,awayPens=0;
+let events=[],selectedTeam='home',currentEventType='',currentIsMissed=false;
+let modalCMI=false,modalCRE=false,modalSelectedOfficials=new Set();
+let activeTab='all',activeTypeFilters=new Set(),statsTeam='all';
+let activeOfficialFilter='all'; // 'all' | 'CR' | 'AR1' | 'AR2' | '4th' | 'none'
+let popoverEventId=null,selectedPeriodType='half';
+
+function pad(n){return String(n).padStart(2,'0');}
+function clockStr(s){return pad(Math.floor(s/60))+':'+pad(s%60);}
+function currentPeriod(){return periods[currentPeriodIdx]||null;}
+
+function updateClockDisplay(){
+  let p=currentPeriod();
+  if(!p){document.getElementById('clock').textContent='00:00';document.getElementById('clock-period').textContent='Not started';return;}
+  let disp;
+  if(p.countsUp){disp=clockStr(p.startOffset+periodElapsed);}
+  else{let r=Math.max(0,p.length*60-periodElapsed);disp=clockStr(r);}
+  document.getElementById('clock').textContent=disp;
+  document.getElementById('clock-period').textContent=p.name;
+}
+
+function toggleClock(){
+  if(!currentPeriod()){openNextPeriod();return;}
+  if(clockRunning){clearInterval(clockInterval);clockRunning=false;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';document.getElementById('clock-btn').classList.remove('active');}
+  else{clockRunning=true;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';document.getElementById('clock-btn').classList.add('active');clockInterval=setInterval(()=>{periodElapsed++;globalElapsed++;updateClockDisplay();},1000);}
+}
+
+function getDisplayMinute(){
+  let p=currentPeriod();if(!p)return 0;
+  return Math.floor((p.startOffset+periodElapsed)/60);
+}
+
+function openNextPeriod(){
+  let halfCount=periods.filter(p=>p.type==='half').length;
+  let etCount=periods.filter(p=>p.type==='et').length;
+  let typeDefault=periods.length===0?'half':(periods.length===1?'half':(periods.length===2?'et':'et'));
+  let lengthDefault=typeDefault==='et'?15:45;
+  document.getElementById('period-length-input').value=lengthDefault;
+  document.getElementById('clock-counts-up').checked=true;
+  document.getElementById('period-name-input').value='';
+  document.getElementById('period-name-wrap').style.display='none';
+  document.getElementById('period-length-wrap').style.display='block';
+  document.querySelectorAll('.pt-opt').forEach(o=>o.classList.remove('selected'));
+  document.querySelector('.pt-opt[data-type="'+typeDefault+'"]').classList.add('selected');
+  selectedPeriodType=typeDefault;
+  document.getElementById('period-modal-title').textContent=periods.length===0?'Start Match':'Next Period';
+  document.getElementById('period-modal-bg').classList.add('open');
+}
+function closePeriodModal(){document.getElementById('period-modal-bg').classList.remove('open');}
+
+function selectPeriodType(el){
+  document.querySelectorAll('.pt-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPeriodType=el.dataset.type;
+  document.getElementById('period-length-wrap').style.display=selectedPeriodType==='shootout'?'none':'block';
+  document.getElementById('period-name-wrap').style.display=selectedPeriodType==='custom'?'block':'none';
+}
+
+function startNextPeriod(){
+  if(clockRunning){clearInterval(clockInterval);clockRunning=false;document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';document.getElementById('clock-btn').classList.remove('active');}
+  let type=selectedPeriodType;
+  let length=parseInt(document.getElementById('period-length-input').value)||45;
+  let countsUp=document.getElementById('clock-counts-up').checked;
+  let customName=document.getElementById('period-name-input').value.trim();
+  let halfCount=periods.filter(p=>p.type==='half').length;
+  let etCount=periods.filter(p=>p.type==='et').length;
+  let name,startOffset;
+  let lastPeriod=periods[periods.length-1];
+  let lastEnd=lastPeriod?(lastPeriod.startOffset+(lastPeriod.length||0)*60):0;
+  if(type==='half'){
+    name=halfCount===0?'1st Half':'2nd Half';
+    // 2nd half clock starts at the 1st half's length
+    if(halfCount===0){startOffset=0;}
+    else{let fh=periods.find(p=>p.type==='half');startOffset=fh?fh.length*60:lastEnd;}
+  } else if(type==='et'){
+    name=etCount===0?'ET – 1st Half':'ET – 2nd Half';
+    startOffset=lastEnd;
+  } else if(type==='shootout'){
+    name='Penalty Shootout';length=0;countsUp=true;startOffset=lastEnd;
+    document.getElementById('shootout-display').style.display='flex';
+  } else {
+    name=customName||('Period '+(periods.length+1));
+    startOffset=lastEnd;
+  }
+  if(currentPeriodIdx>=0)periods[currentPeriodIdx].done=true;
+  periods.push({name,type,length,countsUp,startOffset,done:false});
+  currentPeriodIdx=periods.length-1;
+  periodElapsed=0;
+  renderPeriodPills();closePeriodModal();updateClockDisplay();
+  clockRunning=true;
+  document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';
+  document.getElementById('clock-btn').classList.add('active');
+  clockInterval=setInterval(()=>{periodElapsed++;globalElapsed++;updateClockDisplay();},1000);
+}
+
+function renderPeriodPills(){
+  let row=document.getElementById('period-row');row.innerHTML='';
+  periods.forEach((p,i)=>{
+    let pill=document.createElement('span');
+    pill.className='period-pill'+(i===currentPeriodIdx?' active':'')+(p.done&&i!==currentPeriodIdx?' done':'');
+    pill.textContent=p.name;row.appendChild(pill);
+  });
+  let add=document.createElement('span');add.className='period-pill-add';add.textContent='+ Period';add.onclick=openNextPeriod;row.appendChild(add);
+}
+
+function isShootout(){let p=currentPeriod();return p&&p.type==='shootout';}
+
+function toggleModalOfficial(chip){
+  let pos=chip.dataset.pos;
+  if(modalSelectedOfficials.has(pos)){modalSelectedOfficials.delete(pos);chip.classList.remove('selected');}
+  else{modalSelectedOfficials.add(pos);chip.classList.add('selected');}
+}
+function resetModalOfficials(){modalSelectedOfficials=new Set();document.querySelectorAll('#modal-officials-chips .official-chip').forEach(c=>c.classList.remove('selected'));}
+function toggleFlag(type){
+  if(type==='cmi'){modalCMI=!modalCMI;document.getElementById('toggle-cmi').className='flag-toggle'+(modalCMI?' on-cmi':'');}
+  else{modalCRE=!modalCRE;document.getElementById('toggle-cre').className='flag-toggle'+(modalCRE?' on-cre':'');}
+}
+
+function getTeamLabel(type){
+  if(['Foul','Yellow Card','Red Card','Offside','Missed Foul','Missed Card','Missed Offside'].includes(type))return 'Team committing offense';
+  if(['Corner Kick','Goal Kick'].includes(type))return 'Team taking kick';
+  if(['Substitution','Injury'].includes(type))return 'Team involved';
+  return 'Team';
+}
+
+function selectTeam(t){
+  selectedTeam=t;
+  let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
+  document.getElementById('opt-home').className='team-opt'+(t==='home'?' selected':'');
+  document.getElementById('opt-away').className='team-opt'+(t==='away'?' selected':'');
+  document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
+}
+
+function openModal(type,isMissed){
+  isMissed=isMissed||false;
+  currentEventType=type;currentIsMissed=isMissed;
+  modalCMI=false;modalCRE=false;resetModalOfficials();
+  document.getElementById('toggle-cmi').className='flag-toggle';
+  document.getElementById('toggle-cre').className='flag-toggle';
+  document.getElementById('modal-title').textContent=(isMissed?'⚠ Log: ':'Log: ')+type;
+  ['modal-player','modal-notes'].forEach(id=>document.getElementById(id).value='');
+  ['modal-decision','modal-impact','missed-card-type','missed-offside-type','shootout-result'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('incorrect-decision-check').checked=false;
+  document.getElementById('team-label').textContent=getTeamLabel(type);
+  document.getElementById('missed-banner').style.display=isMissed?'flex':'none';
+  document.getElementById('btn-save-main').className='btn-save'+(isMissed?' missed-save':'');
+  document.getElementById('missed-card-type-wrap').style.display=(type==='Missed Card')?'block':'none';
+  document.getElementById('missed-offside-type-wrap').style.display=(type==='Missed Offside')?'block':'none';
+  document.getElementById('impact-wrap').style.display=isMissed?'block':'none';
+  const decTypes=['Foul','Yellow Card','Red Card','Penalty','Offside','VAR Review','Missed Foul','Missed Card','Missed Offside','Missed Goal'];
+  document.getElementById('decision-wrap').style.display=decTypes.includes(type)?'block':'none';
+  document.getElementById('incorrect-decision-wrap').style.display=['Corner Kick','Goal Kick'].includes(type)?'block':'none';
+  document.getElementById('shootout-result-wrap').style.display=isShootout()?'block':'none';
+  let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
+  document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
+  selectTeam('home');
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-player').focus(),50);
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+
+function saveEvent(){
+  let player=document.getElementById('modal-player').value.trim();
+  let notes=document.getElementById('modal-notes').value.trim();
+  let decision=document.getElementById('modal-decision').value;
+  let impact=document.getElementById('modal-impact').value;
+  let missedCardType=document.getElementById('missed-card-type').value;
+  let missedOffsideType=document.getElementById('missed-offside-type').value;
+  let incorrectDecision=document.getElementById('incorrect-decision-check').checked;
+  let shootoutResult=document.getElementById('shootout-result').value;
+  let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
+  let teamName=selectedTeam==='home'?hn:an;
+  let officials=Array.from(modalSelectedOfficials);
+  let p=currentPeriod();
+  let displaySecs=p?(p.startOffset+periodElapsed):0;
+  let dispMin=Math.floor(displaySecs/60);
+  let dispSec=displaySecs%60;
+  let ev={id:Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:selectedTeam,teamName,player,notes,decision,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,officials,minute:dispMin,second:dispSec,periodName:p?p.name:'',globalSec:globalElapsed};
+  events.unshift(ev);
+  if(currentEventType==='Goal'){if(selectedTeam==='home')homeScore++;else awayScore++;document.getElementById('home-score').textContent=homeScore;document.getElementById('away-score').textContent=awayScore;}
+  if(currentEventType==='Penalty'&&isShootout()){if(selectedTeam==='home')homePens++;else awayPens++;document.getElementById('home-pens').textContent=homePens;document.getElementById('away-pens').textContent=awayPens;}
+  updateStats();renderLog();updateTypeFilterChips();closeModal();
+}
+
+function updateStats(){
+  let team=statsTeam;
+  let f=team==='all'?events:events.filter(e=>e.team===team);
+  document.getElementById('stat-fouls').textContent=f.filter(e=>e.type==='Foul').length;
+  document.getElementById('stat-yellows').textContent=f.filter(e=>e.type==='Yellow Card').length;
+  document.getElementById('stat-reds').textContent=f.filter(e=>e.type==='Red Card').length;
+  let mc=events.filter(e=>e.missed).length,cmic=events.filter(e=>e.cmi).length,crec=events.filter(e=>e.cre).length;
+  document.getElementById('stat-missed').textContent=mc;
+  document.getElementById('stat-cmi').textContent=cmic;
+  document.getElementById('stat-cre').textContent=crec;
+  document.getElementById('count-all').textContent=events.length;
+  let cm=document.getElementById('count-missed');cm.textContent=mc;cm.className='tab-count'+(mc>0?' has-missed':'');
+  let cc=document.getElementById('count-cmi');cc.textContent=cmic;cc.className='tab-count'+(cmic>0?' has-cmi':'');
+  let cr=document.getElementById('count-cre');cr.textContent=crec;cr.className='tab-count'+(crec>0?' has-cre':'');
+}
+
+function setStatsTeam(t){statsTeam=t;['all','home','away'].forEach(x=>document.getElementById('stt-'+x).className='stt-btn'+(t===x?' active':''));updateStats();}
+
+function setTab(t){activeTab=t;['all','missed','cmi','cre'].forEach(tab=>document.getElementById('tab-'+tab).className='tab-btn'+(t===tab?' active':''));renderLog();}
+
+function setOfficialFilter(val){
+  activeOfficialFilter=val;
+  ['all','CR','AR1','AR2','4th','none'].forEach(v=>{
+    let el=document.getElementById('off-chip-'+v);
+    if(el) el.className='off-chip'+(v==='all'?' all-chip':'')+(v===val?' active':'');
+  });
+  renderLog();
+}
+
+function updateTypeFilterChips(){
+  let usedTypes=[...new Set(events.map(e=>e.type))].sort();
+  let row=document.getElementById('type-filter-row');row.innerHTML='';
+  // Show/hide official filter row based on whether any event has officials
+  let anyOfficials=events.some(e=>e.officials&&e.officials.length>0);
+  document.getElementById('official-filter-row').style.display=anyOfficials?'flex':'none';
+  if(!usedTypes.length)return;
+  let clearChip=document.createElement('span');
+  clearChip.className='type-chip'+(activeTypeFilters.size===0?' active':'');
+  clearChip.textContent='All types';
+  clearChip.onclick=()=>{activeTypeFilters.clear();updateTypeFilterChips();renderLog();};
+  row.appendChild(clearChip);
+  usedTypes.forEach(type=>{
+    let chip=document.createElement('span');
+    chip.className='type-chip'+(activeTypeFilters.has(type)?' active':'');
+    chip.textContent=type;
+    chip.onclick=()=>{if(activeTypeFilters.has(type))activeTypeFilters.delete(type);else activeTypeFilters.add(type);updateTypeFilterChips();renderLog();};
+    row.appendChild(chip);
+  });
+}
+
+const typeIcons={'Goal':'ti-ball-football','Yellow Card':'ti-square','Red Card':'ti-square','Foul':'ti-alert-triangle','Penalty':'ti-circle-dot','Offside':'ti-flag','Corner Kick':'ti-corner-up-right','Goal Kick':'ti-arrow-back-up','Substitution':'ti-arrows-exchange','Injury':'ti-first-aid-kit','Save':'ti-hand-stop','VAR Review':'ti-device-tv','Referee Note':'ti-notes','Missed Foul':'ti-alert-triangle','Missed Card':'ti-square','Missed Offside':'ti-flag','Missed Goal':'ti-ball-football'};
+
+function renderLog(){
+  let el=document.getElementById('event-log');
+  let filtered=events;
+  if(activeTab==='missed')filtered=filtered.filter(e=>e.missed);
+  else if(activeTab==='cmi')filtered=filtered.filter(e=>e.cmi);
+  else if(activeTab==='cre')filtered=filtered.filter(e=>e.cre);
+  if(activeTypeFilters.size>0)filtered=filtered.filter(e=>activeTypeFilters.has(e.type));
+  if(activeOfficialFilter==='none'){filtered=filtered.filter(e=>!e.officials||e.officials.length===0);}
+  else if(activeOfficialFilter!=='all'){filtered=filtered.filter(e=>e.officials&&e.officials.includes(activeOfficialFilter));}
+  if(!filtered.length){
+    const msgs={all:'No events logged yet',missed:'No missed calls logged',cmi:'No CMI events flagged',cre:'No CRE events flagged'};
+    el.innerHTML='<div class="log-empty">'+(msgs[activeTab]||'No events match filter')+'</div>';return;
+  }
+  el.innerHTML=filtered.map(ev=>{
+    let ico=typeIcons[ev.type]||'ti-circle';
+    let extras=[ev.missedCardType,ev.missedOffsideType,ev.impact,ev.shootoutResult].filter(Boolean);
+    let details=[ev.player,...extras,ev.decision,ev.notes].filter(Boolean).join(' · ');
+    let itemClass='event-item'+(ev.missed?' missed-item':'')+(ev.cmi?' cmi-item':'')+(ev.cre?' cre-item':'');
+    let officialTags=ev.officials.map(o=>'<span class="tag-official">'+o+'</span>').join('');
+    return '<div class="'+itemClass+'"><span class="event-min">'+pad(ev.minute)+':'+pad(ev.second||0)+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+ev.type+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags"><span class="event-team-tag '+(ev.missed?'tag-missed':ev.team==='home'?'tag-home':'tag-away')+'">'+ev.teamName+'</span>'+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+officialTags+'</div></div><div class="event-actions"><button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?ev.officials.join('+'):'Offs')+'</button><button class="del-btn" onclick="deleteEvent('+ev.id+')"><i class="ti ti-x"></i></button></div></div>';
+  }).join('');
+}
+
+function toggleEventFlag(id,flag){let ev=events.find(e=>e.id===id);if(ev){ev[flag]=!ev[flag];updateStats();renderLog();}}
+function deleteEvent(id){events=events.filter(e=>e.id!==id);updateStats();renderLog();updateTypeFilterChips();
+  // if no events have officials left, reset filter
+  if(!events.some(e=>e.officials&&e.officials.length>0)){activeOfficialFilter='all';setOfficialFilter('all');}
+}
+
+function openOfficialsPopover(eventId,btnEl){
+  let ev=events.find(e=>e.id===eventId);if(!ev)return;
+  popoverEventId=eventId;
+  let container=document.getElementById('popover-chips');container.innerHTML='';
+  OFFICIALS.forEach(o=>{
+    let sel=ev.officials.includes(o.id);
+    let chip=document.createElement('span');chip.className='popover-chip'+(sel?' selected':'');chip.textContent=o.label;
+    chip.onclick=e2=>{e2.stopPropagation();let ev2=events.find(x=>x.id===popoverEventId);if(!ev2)return;if(chip.classList.contains('selected')){chip.classList.remove('selected');ev2.officials=ev2.officials.filter(x=>x!==o.id);}else{chip.classList.add('selected');if(!ev2.officials.includes(o.id))ev2.officials.push(o.id);}renderLog();};
+    container.appendChild(chip);
+  });
+  let popover=document.getElementById('officials-popover');
+  let rect=btnEl.getBoundingClientRect();
+  let top=rect.bottom+4,left=rect.left;
+  if(left+190>window.innerWidth)left=window.innerWidth-198;
+  popover.style.top=top+'px';popover.style.left=left+'px';popover.style.display='block';
+  document.getElementById('popover-bg').classList.add('open');
+}
+function closePopover(){document.getElementById('officials-popover').style.display='none';document.getElementById('popover-bg').classList.remove('open');popoverEventId=null;}
+
+function getSummary(){
+  let ref=document.getElementById('ref-name').value||'Unknown';
+  let ar1=document.getElementById('ar1-name').value||'Unknown';
+  let ar2=document.getElementById('ar2-name').value||'Unknown';
+  let fourth=document.getElementById('fourth-official').value||'Unknown';
+  let date=document.getElementById('match-date').value||'Unknown match';
+  let time=document.getElementById('match-time').value||'';
+  let venue=document.getElementById('match-venue').value||'';
+  let age=document.getElementById('match-age').value||'';
+  let comp=document.getElementById('competition').value||'';
+  let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
+  let fmt=e=>{
+    let flags=[e.missed?'MISSED':null,e.cmi?'CMI':null,e.cre?'CRE':null,e.incorrectDecision?'INCORRECT-DECISION':null].filter(Boolean).join(',');
+    let extras=[e.missedCardType,e.missedOffsideType,e.impact,e.shootoutResult].filter(Boolean).join(', ');
+    let offs=e.officials.length?'['+e.officials.join('+')+']':'';
+    return pad(e.minute)+':'+pad(e.second||0)+' '+(e.periodName?'('+e.periodName+') ':'')+(flags?'['+flags+'] ':'')+' ['+e.type+'] '+e.teamName+(offs?' '+offs:'')+(e.player?' - '+e.player:'')+(extras?' {'+extras+'}':'')+(e.decision?' ['+e.decision+']':'')+(e.notes?' - '+e.notes:'');
+  };
+  let officialBreakdown=OFFICIALS.map(o=>{
+    let oEvs=events.filter(e=>e.officials.includes(o.id));
+    if(!oEvs.length)return o.label+': No events assigned';
+    return o.label+':\n'+oEvs.slice().reverse().map(e=>'  '+pad(e.minute)+':'+pad(e.second||0)+' ['+e.type+']'+(e.cmi?' CMI':'')+(e.cre?' CRE':'')+(e.decision?' - '+e.decision:'')+(e.notes?' - '+e.notes:'')).join('\n');
+  }).join('\n\n');
+  let periodSummary=periods.map(p=>p.name+(p.length?' ('+p.length+' min)':'')).join(', ');
+  return 'Match: '+match+(comp?' | '+comp:'')+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee (CR): '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nALL EVENTS:\n'+( events.slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(events.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(events.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(events.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
+}
+
+function exportLog(){let blob=new Blob([getSummary()],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='match_log.txt';a.click();}
+function copyForEval(){navigator.clipboard.writeText('Generate a detailed referee evaluation report based on this match data:\n\n'+getSummary()).then(()=>alert('Match data copied to clipboard. Paste it in a new Claude chat to generate the evaluation report.')).catch(()=>{let ta=document.createElement('textarea');ta.value=getSummary();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Copied! Paste in a new Claude chat for evaluation.');});}
+
+document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('period-modal-bg').addEventListener('click',function(e){if(e.target===this)closePeriodModal();});
+renderPeriodPills();updateClockDisplay();
+</script>
+</body>
+</html>
