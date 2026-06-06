@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Event Logger</title>
+<title>Match Eval Assistant</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -47,13 +47,14 @@ input, select, textarea, button { font-family: inherit; }
 input, select, textarea { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 10px; background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
 input:focus, select:focus, textarea:focus { border-color: var(--color-border-info); }
 .app { max-width: 700px; margin: 0 auto; padding: 1rem; }
-.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 80; background: var(--color-background-primary); padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
 .header-left h2 { font-size: 18px; font-weight: 500; }
 .header-left p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
 .clock-area { display: flex; align-items: center; gap: 8px; }
 .clock { font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; min-width: 68px; }
 .clock-period { font-size: 11px; color: var(--color-text-tertiary); text-align: center; }
 .clock-btn { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 10px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+#clock-btn { min-width: 54px; min-height: 42px; font-size: 20px; padding: 8px 14px; font-weight: 700; }
 .clock-btn:hover { background: var(--color-background-secondary); }
 .clock-btn.active { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
 .period-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
@@ -139,6 +140,10 @@ body.dark .area-options-btn { background:rgba(44,44,46,0.72); }
 .evt-btn.save { border-color: #3B6D11; background: #EAF3DE; } .evt-btn.save .ico { color: #27500A; }
 .evt-btn.note { border-color: #5F5E5A; background: #F1EFE8; } .evt-btn.note .ico { color: #2C2C2A; }
 .evt-btn.to-warn { border-color: #7A5800; background: #FFF8E6; } .evt-btn.to-warn .ico { color: #7A5800; }
+.evt-btn.throwin { border-color: #0F6E56; background: #E1F5EE; } .evt-btn.throwin .ico { color: #085041; }
+.clock-shift-btn { padding: 5px 8px; font-size: 12px; min-width: 38px; }
+.duplicate-note-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-tertiary); line-height: 1.3; white-space: nowrap; }
+.duplicate-note-btn:hover { color: var(--color-text-info); border-color: var(--color-border-info); }
 .missed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 1rem; }
 .evt-btn.missed { border-style: dashed; border-width: 1.5px; }
 .evt-btn.missed-foul { border-color: #A32D2D; background: #FFF5F5; } .evt-btn.missed-foul .ico { color: #A32D2D; }
@@ -176,17 +181,17 @@ body.dark .area-options-btn { background:rgba(44,44,46,0.72); }
 .btn-save { background: var(--color-background-info); color: var(--color-text-info); border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); padding: 6px 13px; cursor: pointer; font-size: 12px; font-weight: 500; }
 .btn-save.missed-save { background: #FCEBEB; color: #791F1F; border-color: #A32D2D; }
 .team-select { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
-.team-opt { padding: 7px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; text-align: center; font-size: 12px; color: var(--color-text-secondary); }
-.team-opt.selected { border-color: var(--color-border-info); background: var(--color-background-info); color: var(--color-text-info); }
+.team-opt { padding: 12px 10px; min-height:44px; font-size:14px; font-weight:600; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; text-align: center; font-size: 12px; color: var(--color-text-secondary); }
+.team-opt.selected { border-color: var(--color-border-info); background: var(--color-text-info); color: #fff; font-weight: 700; box-shadow: inset 0 0 0 1px var(--color-border-info); }
 .officials-chips { display: flex; gap: 5px; margin-bottom: 9px; flex-wrap: wrap; }
 .official-chip { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 4px 13px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.12s; user-select: none; }
-.official-chip.selected { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+.official-chip.selected { background: #185FA5; border-color: #0C447C; color: #fff; box-shadow: inset 0 0 0 1px #0C447C; }
 .flag-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
 .flag-toggle { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 9px; cursor: pointer; background: var(--color-background-secondary); text-align: center; }
 .flag-toggle .flag-title { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); }
 .flag-toggle .flag-desc { font-size: 10px; color: var(--color-text-tertiary); margin-top: 1px; }
-.flag-toggle.on-cmi { background: #FFF3CD; border-color: #C49A00; } .flag-toggle.on-cmi .flag-title { color: #7A5800; }
-.flag-toggle.on-cre { background: #F3E8FF; border-color: #8B3FC8; } .flag-toggle.on-cre .flag-title { color: #5B1FA5; }
+.flag-toggle.on-cmi { background: #7A5800; border-color: #5E4300; box-shadow: inset 0 0 0 1px #5E4300; } .flag-toggle.on-cmi .flag-title, .flag-toggle.on-cmi .flag-desc { color: #fff; }
+.flag-toggle.on-cre { background: #5B1FA5; border-color: #3D126F; box-shadow: inset 0 0 0 1px #3D126F; } .flag-toggle.on-cre .flag-title, .flag-toggle.on-cre .flag-desc { color: #fff; }
 .modal-divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 9px 0; }
 .sub-player-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
 .sub-player-row input { margin-bottom: 0; }
@@ -200,8 +205,8 @@ body.dark .area-options-btn { background:rgba(44,44,46,0.72); }
 .tog-group { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; }
 .tog-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 4px 11px; font-size: 11px; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.12s; user-select: none; white-space: nowrap; }
 .tog-btn:hover { border-color: var(--color-border-info); color: var(--color-text-info); }
-.tog-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
-.tog-btn.danger.active { background: #FCEBEB; color: #791F1F; border-color: #A32D2D; }
+.tog-btn.active { background: #185FA5; color: #fff; border-color: #0C447C; font-weight: 700; box-shadow: inset 0 0 0 1px #0C447C; }
+.tog-btn.danger.active { background: #A32D2D; color: #fff; border-color: #791F1F; box-shadow: inset 0 0 0 1px #791F1F; }
 .ref-color-toggle-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 9px; }
 .ref-color-toggle { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 9px; cursor: pointer; font-size: 11px; font-weight: 600; background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.12s; text-align: center; }
 .ref-color-toggle:hover { transform: translateY(-1px); filter: brightness(0.97); }
@@ -285,7 +290,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 /* Popover */
 .officials-popover-bg { display: none; position: fixed; inset: 0; z-index: 200; }
 .officials-popover-bg.open { display: block; }
-.officials-popover { position: fixed; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 11px; width: 190px; z-index: 201; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.officials-popover { position: fixed; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 11px; width: 190px; z-index: 201; box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-height: calc(100vh - 16px); overflow-y: auto; }
 .officials-popover h4 { font-size: 12px; font-weight: 500; margin-bottom: 7px; }
 .popover-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .popover-chip { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 3px 10px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); }
@@ -296,13 +301,15 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Logger</h2><p>FalkEval42</p></div>
+    <div class="header-left"><h2>Match Evaluation Assistant</h2><p>FalkEval57</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
         <div class="clock-period" id="clock-period">Not started</div>
       </div>
+      <button class="clock-btn clock-shift-btn" onclick="shiftClock(-5)" title="Rewind 5 seconds">−5s</button>
       <button class="clock-btn" id="clock-btn" onclick="toggleClock()"><i class="ti ti-player-play"></i></button>
+      <button class="clock-btn clock-shift-btn" onclick="shiftClock(5)" title="Fast-forward 5 seconds">+5s</button>
       <button class="clock-btn" onclick="openNextPeriod()" title="Next period">⏭</button>
       <button class="dark-toggle" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button>
       <button class="clock-btn" id="end-match-btn" onclick="endMatch()" title="End match" style="font-size:11px;">End Match</button>
@@ -440,6 +447,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
           <button class="evt-btn foul" onclick="openModal('Foul')"><i class="ti ti-alert-triangle ico"></i><span class="lbl">Foul</span></button>
           <button class="evt-btn penalty" onclick="openModal('Penalty')"><i class="ti ti-circle-dot ico"></i><span class="lbl">Penalty</span></button>
           <button class="evt-btn offside" onclick="openModal('Offside')"><i class="ti ti-flag ico"></i><span class="lbl">Offside</span></button>
+          <button class="evt-btn note" onclick="openModal('Referee Note')"><i class="ti ti-notes ico"></i><span class="lbl">Note</span></button>
         </div>
       </div>
     </div>
@@ -463,28 +471,18 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
           <button class="evt-btn corner shootout-hide" onclick="openModal('Corner Kick')"><i class="ti ti-corner-up-right ico"></i><span class="lbl">Corner Kick</span></button>
           <button class="evt-btn sub" onclick="openModal('Substitution')"><i class="ti ti-arrows-exchange ico"></i><span class="lbl">Sub</span></button>
           <button class="evt-btn injury" onclick="openModal('Injury')"><i class="ti ti-first-aid-kit ico"></i><span class="lbl">Injury</span></button>
-          <button class="evt-btn note" onclick="openModal('Referee Note')"><i class="ti ti-notes ico"></i><span class="lbl">Note</span></button>
+          <button class="evt-btn throwin shootout-hide" onclick="openModal('Throw-in')"><i class="ti ti-arrow-autofit-right ico"></i><span class="lbl">Throw-in</span></button>
           <button class="evt-btn var var-event-btn" id="var-event-btn" onclick="openModal('VAR Review')"><i class="ti ti-device-tv ico"></i><span class="lbl">VAR</span></button>
         </div>
       </div>
     </div>
 
-    <div class="event-subsection" id="missed-events-section">
-      <div class="section-hdr" onclick="toggleSection('sec-missed-events',this)"><p class="section-label" style="margin:0">Missed calls</p><span class="collapse-icon">▾</span></div>
-      <div class="collapsible" id="sec-missed-events" style="max-height:300px;">
-        <div class="missed-grid" style="grid-template-columns:repeat(3,1fr);">
-          <button class="evt-btn missed missed-goal" onclick="openModal('Missed Goal',true)"><span class="missed-badge">MISSED</span><i class="ti ti-ball-football ico"></i><span class="lbl">Missed Goal</span></button>
-          <button class="evt-btn missed missed-offside" onclick="openModal('Missed Offside',true)"><span class="missed-badge">MISSED</span><i class="ti ti-flag ico"></i><span class="lbl">Missed Offside</span></button>
-          <button class="evt-btn missed missed-foul" onclick="openModal('Missed Foul',true)"><span class="missed-badge">MISSED</span><i class="ti ti-alert-triangle ico"></i><span class="lbl">Missed Foul</span></button>
-          <button class="evt-btn missed missed-foul" onclick="openModal('Missed Penalty',true)"><span class="missed-badge">MISSED</span><i class="ti ti-circle-dot ico"></i><span class="lbl">Missed Penalty</span></button>
-          <button class="evt-btn missed missed-card" onclick="openModal('Missed Yellow Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico" style="color:#854F0B"></i><span class="lbl">Missed Yellow Card</span></button>
-          <button class="evt-btn missed missed-card" onclick="openModal('Missed Red Card',true)"><span class="missed-badge">MISSED</span><i class="ti ti-square ico" style="color:#A32D2D"></i><span class="lbl">Missed Red Card</span></button>
-        </div>
-      </div>
-    </div>
+    <div class="event-subsection" id="missed-events-section" style="display:none"></div>
   </div><!-- end collapsible sec-events -->
 
   <div class="log-section">
+    <div class="section-hdr" onclick="toggleSection('sec-event-log',this)"><p class="section-label" style="margin:0">Event log</p><span class="collapse-icon">▾</span></div>
+    <div class="collapsible" id="sec-event-log" style="max-height:1200px;">
     <div class="log-controls">
       <div class="log-filters">
         <div class="tab-bar">
@@ -511,6 +509,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       </div>
     </div>
     <div id="event-log"><div class="log-empty">No events logged yet</div></div>
+    </div>
   </div>
 </div>
 
@@ -527,7 +526,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
     <div id="event-time-edit-wrap" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:9px;">
       <div><label>Minute</label><input type="number" id="edit-event-minute" min="0" max="200" /></div>
       <div><label>Second</label><input type="number" id="edit-event-second" min="0" max="59" /></div>
-      <div><label>Period</label><input id="edit-event-period" placeholder="Period" /></div>
+      <div><label>Period</label><select id="edit-event-period"></select></div>
     </div>
     <label id="player-label">Player (name or #)</label>
     <input id="modal-player" placeholder="e.g. #10 or Müller" />
@@ -550,12 +549,17 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       <span class="official-chip" data-pos="AR2" onclick="toggleModalOfficial(this)">AR2</span>
       <span class="official-chip" data-pos="4th" onclick="toggleModalOfficial(this)">4th</span>
     </div>
+    <div id="mark-missed-wrap" style="display:none">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+        <input type="checkbox" id="mark-missed-check" style="width:auto;margin:0;" onchange="syncMarkedMissedUI()" />
+        <span>Mark this as a missed call</span>
+      </label>
+    </div>
     <div id="missed-card-type-wrap" style="display:none">
       <label>Card that should have been shown</label>
       <div class="tog-group" id="tog-missed-card-type">
         <span class="tog-btn" onclick="setTog('missed-card-type',this)">Yellow Card</span>
         <span class="tog-btn" onclick="setTog('missed-card-type',this)">Red Card</span>
-        <span class="tog-btn" onclick="setTog('missed-card-type',this)">Second Yellow (Red)</span>
       </div>
       <input type="hidden" id="missed-card-type" value="" />
     </div>
@@ -626,10 +630,18 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       <input type="hidden" id="modal-to-reason" value="" />
     </div>
     <div id="also-foul-wrap" style="display:none">
-      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
+      <label id="also-foul-label" style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
         <input type="checkbox" id="also-foul-check" style="width:auto;margin:0;" />
         <span>Also a foul</span>
       </label>
+    </div>
+    <div id="card-foul-type-wrap" style="display:none">
+      <label>Related foul call</label>
+      <div class="tog-group" id="tog-card-foul-type">
+        <span class="tog-btn" onclick="setTog('card-foul-type',this)">Foul</span>
+        <span class="tog-btn danger" onclick="setTog('card-foul-type',this)">Missed Foul</span>
+      </div>
+      <input type="hidden" id="card-foul-type" value="" />
     </div>
     <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
       <input type="checkbox" id="review-later-check" style="width:auto;margin:0;" />
@@ -815,6 +827,20 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   </div>
 </div>
 
+<!-- Second yellow confirmation modal -->
+<div class="modal-bg" id="second-yellow-modal-bg">
+  <div class="clock-modal">
+    <h3>Second Yellow Detected</h3>
+    <p id="second-yellow-message" style="font-size:12px;color:var(--color-text-secondary);line-height:1.4;margin-bottom:12px;">
+      This player appears to have received a second yellow card. Mark the player as Sent Off?
+    </p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="secondYellowNo()">No — log missed red</button>
+      <button class="btn-save" onclick="secondYellowYes()">Yes, open red card</button>
+    </div>
+  </div>
+</div>
+
 <!-- Officials popover -->
 <div class="officials-popover-bg" id="popover-bg" onclick="closePopover()"></div>
 <div class="officials-popover" id="officials-popover" style="display:none">
@@ -847,6 +873,7 @@ let homeTeamColor='#185FA5', awayTeamColor='#BA7517', refereeColor='#F9A825';
 let subsLimited=false, subsLimitScope='game', subsLimitType='subs', subsRestrictTotal=false, subsMaxPerTeam=null, subsRestrictWindows=false, subsMaxWindows=null, subsReentryAllowed=false, subsRuleNotes='';
 let nextSubSameMoment=false, activeSubMomentTimestamp=null;
 let editingEventId=null;
+let pendingSecondYellowEvent=null;
 
 function pad(n){return String(n).padStart(2,'0');}
 function clockStr(s){return pad(Math.floor(s/60))+':'+pad(s%60);}
@@ -857,7 +884,7 @@ function tintColor(hex,alpha){let c=hexToRgb(hex);return 'rgba('+c.r+','+c.g+','
 function getTeamColor(team){if(team==='home')return homeTeamColor||'#185FA5';if(team==='away')return awayTeamColor||'#BA7517';return '';}
 function styleTeamElement(el,team,selected){if(!el)return;let color=getTeamColor(team);if(!color)return;el.style.borderColor=color;el.style.background=selected?color:tintColor(color,0.16);el.style.color=selected?readableTextColor(color):color;el.style.fontWeight=selected?'600':'500';}
 function applyTeamColors(){let hn=document.getElementById('home-name'),an=document.getElementById('away-name');if(hn){hn.style.borderColor=homeTeamColor;hn.style.background=tintColor(homeTeamColor,0.12);}if(an){an.style.borderColor=awayTeamColor;an.style.background=tintColor(awayTeamColor,0.12);}let nh=document.getElementById('nm-home'),na=document.getElementById('nm-away');if(nh){nh.style.borderColor=homeTeamColor;nh.style.background=tintColor(homeTeamColor,0.10);}if(na){na.style.borderColor=awayTeamColor;na.style.background=tintColor(awayTeamColor,0.10);}['home','away'].forEach(t=>{let opt=document.getElementById('opt-'+t);if(opt)styleTeamElement(opt,t,opt.classList.contains('selected'));});}
-function setTeamColorsFromNewMatch(){let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');homeTeamColor=(hc&&hc.value)||homeTeamColor||'#185FA5';awayTeamColor=(ac&&ac.value)||awayTeamColor||'#BA7517';applyTeamColors();applyRefereeColor();renderTeamPalette('home');renderTeamPalette('away');}
+function setTeamColorsFromNewMatch(){let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');homeTeamColor=(hc&&hc.value)||homeTeamColor||'#185FA5';awayTeamColor=(ac&&ac.value)||awayTeamColor||'#BA7517';refreshColorDependentDisplays();if(typeof renderTeamPalette==='function'){renderTeamPalette('home');renderTeamPalette('away');}}
 function applyRefereeColor(){
   let card=document.querySelector('.officials-card');
   if(card){
@@ -914,13 +941,21 @@ function updateTeamColorButton(team){
   let btn=document.getElementById('nm-'+team+'-color-btn');
   if(btn){btn.style.background=color;btn.style.color=readableTextColor(color);btn.textContent='Color';}
 }
+function refreshColorDependentDisplays(){
+  // Team/referee colors are applied dynamically when the log is rendered.
+  // Re-render after a color change so existing logged event tags update immediately.
+  applyTeamColors();
+  applyRefereeColor();
+  if(typeof renderLog==='function') renderLog();
+  if(typeof updateTypeFilterChips==='function') updateTypeFilterChips();
+}
 function setTeamColor(team,color){
   if(team==='referee'){
     refereeColor=color;
     let hidden=document.getElementById('nm-ref-color');
     if(hidden) hidden.value=color;
     updateRefereeColorToggles();
-    applyRefereeColor();
+    refreshColorDependentDisplays();
     saveState();
     return;
   }
@@ -928,7 +963,7 @@ function setTeamColor(team,color){
   if(input) input.value=color;
   if(team==='home') homeTeamColor=color; else awayTeamColor=color;
   updateTeamColorButton(team);
-  applyTeamColors();
+  refreshColorDependentDisplays();
   saveState();
 }
 function openTeamColorModal(team){
@@ -989,8 +1024,14 @@ function renderTeamColorModalPalette(){
 }
 function renderTeamPalettes(){
   let hc=document.getElementById('nm-home-color'), ac=document.getElementById('nm-away-color');
-  if(hc) hc.value=homeTeamColor||'#185FA5';
-  if(ac) ac.value=awayTeamColor||'#BA7517';
+  if(hc){
+    hc.value=homeTeamColor||'#185FA5';
+    hc.onchange=function(){setTeamColor('home',this.value);};
+  }
+  if(ac){
+    ac.value=awayTeamColor||'#BA7517';
+    ac.onchange=function(){setTeamColor('away',this.value);};
+  }
   updateTeamColorButton('home');
   updateTeamColorButton('away');
 }
@@ -1085,7 +1126,24 @@ function toggleClock(){
     document.getElementById('clock-btn').classList.add('active');
     startClockInterval();
   }
+  saveState();
 }
+
+function shiftClock(deltaSeconds){
+  if(!currentPeriod() || isShootout()) return;
+  periodElapsedBase=Math.max(0, livePeriodElapsed()+deltaSeconds);
+  globalElapsedBase=Math.max(0, liveGlobalElapsed()+deltaSeconds);
+  if(clockRunning) clockStartWall=Date.now();
+  updateClockDisplay();
+  saveState();
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.code==='Space' && !['INPUT','TEXTAREA','SELECT','BUTTON'].includes((e.target&&e.target.tagName)||'')){
+    e.preventDefault();
+    toggleClock();
+  }
+});
 
 // When tab becomes visible again, resync the display immediately
 document.addEventListener('visibilitychange',function(){
@@ -1213,7 +1271,7 @@ function startNextPeriod(){
     name=customName||('Period '+(periods.length+1));
     startOffset=lastEnd;
   }
-  if(currentPeriodIdx>=0)periods[currentPeriodIdx].done=true;
+  if(currentPeriodIdx>=0){addPeriodSummaryForPreviousPeriod();periods[currentPeriodIdx].done=true;}
   periods.push({name,type,length,countsUp,startOffset,done:false});
   currentPeriodIdx=periods.length-1;
   periodElapsedBase=0;
@@ -1230,7 +1288,7 @@ function startNextPeriod(){
     nextSubSameMoment=false;
     activeSubMomentTimestamp=null;
   }
-  renderPeriodPills();closePeriodModal();updateClockDisplay();updateEventSectionVisibility();updateStats();renderLog();
+  renderPeriodPills();closePeriodModal();updateClockDisplay();updateEventSectionVisibility();updateStats();renderLog();updateTypeFilterChips();saveState();
 }
 
 function renderPeriodPills(){
@@ -1249,7 +1307,7 @@ function updateEventSectionVisibility(){
   let so=isShootout();
   let panel=document.getElementById('shootout-panel'); if(panel) panel.style.display=so?'block':'none';
   let std=document.getElementById('standard-events-section'); if(std) std.style.display=so?'none':'block';
-  let miss=document.getElementById('missed-events-section'); if(miss) miss.style.display=so?'none':'block';
+  let miss=document.getElementById('missed-events-section'); if(miss) miss.style.display='none';
   document.querySelectorAll('.shootout-hide').forEach(el=>el.style.display=so?'none':'flex');
   updateVarVisibility();
   updateShootoutTeamLabels();
@@ -1339,7 +1397,7 @@ function toggleModalOfficial(chip){
   if(modalSelectedOfficials.has(pos)){modalSelectedOfficials.delete(pos);chip.classList.remove('selected');}
   else{modalSelectedOfficials.add(pos);chip.classList.add('selected');}
 }
-function resetModalOfficials(){modalSelectedOfficials=new Set();document.querySelectorAll('#modal-officials-chips .official-chip').forEach(c=>c.classList.remove('selected'));}
+function resetModalOfficials(defaultReferee=false){modalSelectedOfficials=new Set(defaultReferee?['CR']:[]);document.querySelectorAll('#modal-officials-chips .official-chip').forEach(c=>c.classList.toggle('selected', modalSelectedOfficials.has(c.dataset.pos)));}
 function isCorrectDecisionValue(value){
   return String(value||'').trim().toLowerCase()==='correct';
 }
@@ -1347,7 +1405,7 @@ function eventHasCorrectDecision(ev){
   return isCorrectDecisionValue(ev && (ev.correctness || (String(ev.decision||'').split('—')[0])));
 }
 function isAutoCMIEventType(type){
-  return ['Penalty','Red Card','Missed Penalty','Missed Red Card'].includes(type);
+  return ['Penalty','Red Card'].includes(baseEventType(type));
 }
 function isMissedRedCardSelection(type){
   return type==='Missed Red Card' || (type==='Missed Card' && /red/i.test((document.getElementById('missed-card-type')||{}).value||''));
@@ -1390,8 +1448,8 @@ function toggleFlag(type){
 }
 
 function getTeamLabel(type){
-  if(['Foul','Yellow Card','Red Card','Offside','Missed Foul','Missed Card','Missed Offside','Penalty','Missed Penalty'].includes(type))return 'Team committing offense';
-  if(['Corner Kick','Goal Kick'].includes(type))return 'Team taking kick';
+  if(['Foul','Yellow Card','Red Card','Offside','Penalty','Team Official Warning'].includes(baseEventType(type)))return 'Team committing offense';
+  if(['Corner Kick','Goal Kick','Throw-in'].includes(type))return 'Team taking restart';
   if(type==='Substitution')return 'Team Making Sub';
   if(['Injury'].includes(type))return 'Team involved';
   if(type==='Referee Note')return 'Team involved (optional)';
@@ -1402,7 +1460,7 @@ function getTeamLabel(type){
 function selectTeam(t){
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
-  if(currentEventType==='Referee Note'){
+  if(currentEventType==='Referee Note' || currentEventType==='Period Summary'){
     let opt=document.getElementById('opt-'+t);
     if(opt) opt.classList.toggle('selected');
     let homeOn=document.getElementById('opt-home').classList.contains('selected');
@@ -1432,19 +1490,18 @@ function resetNoteTeamToggles(){
 
 function getCurrentTeamSelection(){
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
-  if(currentEventType==='Referee Note'){
+  if(currentEventType==='Referee Note' || currentEventType==='Period Summary'){
     let homeOn=document.getElementById('opt-home').classList.contains('selected');
     let awayOn=document.getElementById('opt-away').classList.contains('selected');
     if(homeOn&&awayOn) return {team:'both',teamName:hn+' + '+an};
     if(homeOn) return {team:'home',teamName:hn};
     if(awayOn) return {team:'away',teamName:an};
-    return {team:'none',teamName:'Neither team'};
+    return {team:'none',teamName:''};
   }
-  return {team:selectedTeam,teamName:selectedTeam==='home'?hn:an};
+  if(selectedTeam==='none') return {team:'none',teamName:''}; return {team:selectedTeam,teamName:selectedTeam==='home'?hn:an};
 }
 
 function teamTagClass(ev){
-  if(ev.missed) return 'tag-missed';
   if(ev.team==='home') return 'tag-home';
   if(ev.team==='away') return 'tag-away';
   if(ev.team==='both') return 'tag-both';
@@ -1452,7 +1509,7 @@ function teamTagClass(ev){
   return 'tag-away';
 }
 function teamTagStyle(ev){
-  if(!ev || ev.missed) return '';
+  if(!ev) return '';
   if(ev.team==='home'||ev.team==='away'){
     let color=getTeamColor(ev.team);
     return 'background:'+tintColor(color,0.18)+';color:'+color+';border:0.5px solid '+color+';';
@@ -1462,6 +1519,23 @@ function teamTagStyle(ev){
 }
 
 
+function refreshEventPeriodOptions(selectedName){
+  let perEl=document.getElementById('edit-event-period');
+  if(!perEl) return;
+  let names=periods.map(p=>p.name).filter(Boolean);
+  let cur=currentPeriod();
+  if(cur && cur.name && !names.includes(cur.name)) names.push(cur.name);
+  if(selectedName && !names.includes(selectedName)) names.push(selectedName);
+  if(!names.length) names=['Not started'];
+  perEl.innerHTML='';
+  names.forEach(name=>{
+    let opt=document.createElement('option');
+    opt.value=name;
+    opt.textContent=name;
+    perEl.appendChild(opt);
+  });
+  perEl.value=selectedName && names.includes(selectedName) ? selectedName : ((cur&&cur.name&&names.includes(cur.name)) ? cur.name : names[0]);
+}
 function setModalTimeFields(ts){
   ts=ts||captureEventTimestamp();
   let minEl=document.getElementById('edit-event-minute');
@@ -1469,7 +1543,8 @@ function setModalTimeFields(ts){
   let perEl=document.getElementById('edit-event-period');
   if(minEl) minEl.value=ts.minute||0;
   if(secEl) secEl.value=ts.second||0;
-  if(perEl) perEl.value=ts.periodName||'';
+  refreshEventPeriodOptions(ts.periodName||'');
+  if(perEl) perEl.value=ts.periodName||perEl.value||'';
 }
 function getModalTimeFields(){
   let minEl=document.getElementById('edit-event-minute');
@@ -1491,7 +1566,7 @@ function configureOffsideSituationOptions(isMissedOffside){
   let grp=document.getElementById('tog-missed-offside-type');
   let hid=document.getElementById('missed-offside-type');
   if(!grp) return;
-  let options=isMissedOffside?['Incorrectly NOT Given','Incorrectly Given']:['Correctly Given','Correctly NOT Given'];
+  let options=['Correct Given','Correct Not Given','Incorrect Given','Incorrect Not Given'];
   grp.innerHTML='';
   options.forEach(opt=>{
     let b=document.createElement('span');
@@ -1515,7 +1590,7 @@ function setModalOfficialsFromEvent(ev){
   });
 }
 function setModalTeamFromEvent(ev){
-  if(currentEventType==='Referee Note'){
+  if(currentEventType==='Referee Note' || currentEventType==='Period Summary'){
     resetNoteTeamToggles();
     document.getElementById('opt-home').classList.toggle('selected', ev.team==='home'||ev.team==='both');
     document.getElementById('opt-away').classList.toggle('selected', ev.team==='away'||ev.team==='both');
@@ -1548,6 +1623,7 @@ function openEditModal(id){
   activateTogByValue('shootout-result',ev.shootoutResult||'');
   activateTogByValue('modal-card-reason',ev.cardReason||'');
   activateTogByValue('modal-to-reason',ev.toReason||'');
+  activateTogByValue('card-foul-type',ev.missedFoul?'Missed Foul':(ev.alsoFoul?'Foul':''));
   modalCMI=!!ev.cmi; modalCRE=!!ev.cre;
   setModalOfficialsFromEvent(ev);
   syncAutomaticCMI();
@@ -1556,8 +1632,8 @@ function openEditModal(id){
   setModalFlagClasses();
 }
 function recalculateScoreboards(){
-  homeScore=events.filter(e=>e.type==='Goal'&&e.team==='home').length;
-  awayScore=events.filter(e=>e.type==='Goal'&&e.team==='away').length;
+  homeScore=events.filter(e=>e.type==='Goal'&&!e.missed&&e.team==='home').length;
+  awayScore=events.filter(e=>e.type==='Goal'&&!e.missed&&e.team==='away').length;
   homePens=events.filter(e=>e.type==='Shootout Attempt'&&e.team==='home'&&e.shootoutResult==='Scored').length;
   awayPens=events.filter(e=>e.type==='Shootout Attempt'&&e.team==='away'&&e.shootoutResult==='Scored').length;
   document.getElementById('home-score').textContent=homeScore;
@@ -1565,6 +1641,132 @@ function recalculateScoreboards(){
   document.getElementById('home-pens').textContent=homePens;
   document.getElementById('away-pens').textContent=awayPens;
   if(homePens||awayPens||periods.some(p=>p.type==='shootout')) document.getElementById('shootout-display').style.display='flex';
+}
+
+
+
+const MISSABLE_EVENT_TYPES=['Goal','Foul','Penalty','Offside','Yellow Card','Red Card','Team Official Warning','Corner Kick','Goal Kick','Throw-in'];
+function isMissableType(type){return MISSABLE_EVENT_TYPES.includes(baseEventType(type));}
+function baseEventType(type){
+  const map={'Missed Goal':'Goal','Missed Foul':'Foul','Missed Penalty':'Penalty','Missed Offside':'Offside','Missed Yellow Card':'Yellow Card','Missed Red Card':'Red Card','Missed Team Official Warning':'Team Official Warning','Missed Card':'Yellow Card'};
+  return map[type]||type;
+}
+function displayEventType(ev){
+  if(!ev) return '';
+  if(ev.missed && ev.missedCardType) return ev.missedCardType;
+  return baseEventType(ev.type);
+}
+function typeMatchesFilter(ev,type){
+  const base=displayEventType(ev);
+  if(type===base || type===ev.type) return true;
+  if(type==='Foul' && (base==='Penalty' || ev.missedFoul || (ev.alsoFoul && ['Yellow Card','Red Card'].includes(base)))) return true;
+  return false;
+}
+function isRecordedFoulEvent(e){
+  const base=baseEventType(e.type);
+  return !e.missed && (base==='Foul'||base==='Penalty'||(e.alsoFoul&&['Yellow Card','Red Card'].includes(base)));
+}
+function periodStats(periodName){
+  const hn=document.getElementById('home-name')?.value||'Home', an=document.getElementById('away-name')?.value||'Away';
+  function forTeam(team){
+    const evs=events.filter(e=>(e.periodName||'')===(periodName||'') && e.team===team);
+    return {goals:evs.filter(e=>!e.missed && baseEventType(e.type)==='Goal').length,
+      fouls:evs.filter(isRecordedFoulEvent).length,
+      cards:evs.filter(e=>!e.missed && ['Yellow Card','Red Card'].includes(baseEventType(e.type))).length,
+      missed:evs.filter(e=>e.missed).length};
+  }
+  return {homeName:hn,awayName:an,home:forTeam('home'),away:forTeam('away')};
+}
+function formatPeriodStats(periodName,stoppage){
+  let s=periodStats(periodName);
+  const fmt=(name,x)=>name+': Goals '+x.goals+', Fouls '+x.fouls+', Cards '+x.cards+', Missed '+x.missed;
+  return 'Period stats — '+(periodName||'Period')+': '+fmt(s.homeName,s.home)+' | '+fmt(s.awayName,s.away)+' | Stoppage time given: '+(stoppage||'not recorded');
+}
+function addPeriodSummaryForPreviousPeriod(){
+  const p=periods[currentPeriodIdx];
+  if(!p || !p.name || events.some(e=>e.type==='Period Summary' && e.periodName===p.name)) return;
+  let stoppage=prompt('Stoppage time given for '+p.name+'? (example: 2 minutes or 45+2)', '');
+  let ts=captureEventTimestamp();
+  events.unshift({id:Date.now()+Math.floor(Math.random()*1000),type:'Period Summary',missed:false,cmi:false,cre:false,team:'none',teamName:'',player:'',notes:formatPeriodStats(p.name,stoppage),decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:'',alsoFoul:false,reviewLater:false,officials:[],minute:ts.minute,second:ts.second,periodName:p.name,globalSec:ts.globalSec,stoppageTime:stoppage||''});
+}
+function syncMarkedMissedUI(){
+  let checked=!!(document.getElementById('mark-missed-check')&&document.getElementById('mark-missed-check').checked);
+  currentIsMissed=checked;
+  let banner=document.getElementById('missed-banner'); if(banner) banner.style.display=checked?'flex':'none';
+  let save=document.getElementById('btn-save-main'); if(save) save.className='btn-save'+(checked?' missed-save':'');
+  let base=baseEventType(currentEventType);
+  let isCard=['Yellow Card','Red Card','Team Official Warning'].includes(base);
+  let mct=document.getElementById('missed-card-type-wrap'); if(mct) mct.style.display=(isCard || ['Foul','Penalty'].includes(base))?'block':'none';
+  let off=document.getElementById('missed-offside-type-wrap'); if(off) off.style.display=base==='Offside'?'block':'none';
+  configureOffsideSituationOptions(false);
+  let decTypes=['Foul','Yellow Card','Red Card','Penalty','VAR Review'];
+  let showDecision=(!checked && decTypes.includes(base));
+  document.getElementById('decision-wrap').style.display=showDecision?'block':'none';
+  document.getElementById('difficulty-wrap').style.display=(checked || showDecision || base==='Offside')?'block':'none';
+  let cfw=document.getElementById('card-foul-type-wrap'); if(cfw) cfw.style.display=(isCard || !!(document.getElementById('missed-card-type')||{}).value)?'block':'none';
+  updateImpactVisibility();
+  syncMissedCardReasonUI();
+}
+const YELLOW_CARD_REASONS=['UB-SPA','UB-Reckless','UB-DOGSO downgrade','UB-other','Dissent (DT)','Persistent Offenses (PO)','Delaying the Restart (DR)','FRD','ERL','TO - Other'];
+const RED_CARD_REASONS=['2CT','DOGSO-Foul','DOGSO-Handball','Serious Foul Play','Violent Conduct','Abusive Language','Spitting/Biting','TO - Other'];
+function getCardReasonsFor(cardType){
+  return /red/i.test(cardType||'') ? RED_CARD_REASONS : YELLOW_CARD_REASONS;
+}
+function renderCardReasonOptions(cardType){
+  let lbl=document.getElementById('card-reason-label');
+  let grp=document.getElementById('tog-modal-card-reason');
+  if(!grp) return;
+  grp.innerHTML='';
+  let useType=cardType||currentEventType;
+  lbl.textContent=/red/i.test(useType)?'Red card reason':'Yellow card reason';
+  getCardReasonsFor(useType).forEach(r=>{
+    let b=document.createElement('span');
+    b.className='tog-btn';
+    b.textContent=r;
+    b.onclick=function(){setTog('modal-card-reason',this);};
+    grp.appendChild(b);
+  });
+}
+function isMissedCardOptionContext(type){
+  return ['Foul','Missed Foul','Missed Card','Missed Yellow Card','Missed Red Card'].includes(type);
+}
+function syncMissedCardReasonUI(){
+  let missedType=(document.getElementById('missed-card-type')||{}).value||'';
+  let reasonWrap=document.getElementById('card-reason-wrap');
+  let impactWrap=document.getElementById('impact-wrap');
+  let shouldShowReason=['Yellow Card','Red Card'].includes(currentEventType) || !!missedType || ['Missed Yellow Card','Missed Red Card'].includes(currentEventType);
+  if(reasonWrap) reasonWrap.style.display=shouldShowReason?'block':'none';
+  if(shouldShowReason) renderCardReasonOptions(missedType || currentEventType);
+  if(impactWrap && missedType) impactWrap.style.display='block';
+  let cfw=document.getElementById('card-foul-type-wrap');
+  if(cfw) cfw.style.display=(shouldShowReason || !!missedType)?'block':'none';
+}
+
+function officialDisplayLabel(id){
+  let found=OFFICIALS.find(o=>o.id===id);
+  return found ? found.label : id;
+}
+function normalizePlayerKey(player){
+  let s=String(player||'').trim().toLowerCase().replace(/\s+/g,' ');
+  if(!s) return '';
+  // Ignore team words and common labels so Home #7, home 7, Player #7, and #7 match.
+  s=s.replace(/\b(home|away|player|no\.?|number|#)\b/g,' ').replace(/\s+/g,' ').trim();
+  // If a jersey number is present anywhere, use it as the player key.
+  let jersey=s.match(/(?:^|\D)(\d{1,3})(?:\D|$)/);
+  if(jersey) return '#'+String(parseInt(jersey[1],10));
+  return s.replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+function countTeamFoulsAtEvent(ev){
+  if(!ev || !['home','away'].includes(ev.team)) return '';
+  let foulTypes=['Foul','Penalty'];
+  let ordered=events.slice().reverse();
+  let count=0;
+  for(let e of ordered){
+    if(e.team===ev.team && isRecordedFoulEvent(e)) count++;
+    if(e.id===ev.id) return count;
+  }
+  return '';
 }
 
 function openModal(type,isMissed,editMode){
@@ -1575,15 +1777,15 @@ function openModal(type,isMissed,editMode){
     alert('VAR is not enabled for this match. Start a new match and check “VAR in use” to log VAR reviews.');
     return;
   }
-  currentEventType=type;currentIsMissed=isMissed;
+  currentEventType=baseEventType(type);currentIsMissed=!!isMissed;
   pendingEventTimestamp=captureEventTimestamp();
   setModalTimeFields(pendingEventTimestamp);
-  modalCMI=false;modalCRE=false;resetModalOfficials();
+  modalCMI=false;modalCRE=false;resetModalOfficials(['Foul','Penalty','Yellow Card','Red Card','Team Official Warning'].includes(baseEventType(currentEventType))); 
   document.getElementById('toggle-cmi').className='flag-toggle';
   document.getElementById('toggle-cre').className='flag-toggle';
   document.getElementById('toggle-cre').style.display='';
   syncAutomaticCMI();
-  document.getElementById('modal-title').textContent=(isMissed?'⚠ Log: ':'Log: ')+type;
+  document.getElementById('modal-title').textContent=(currentIsMissed?'⚠ Log missed: ':'Log: ')+currentEventType;
   let saveBtn=document.getElementById('btn-save-main'); if(saveBtn) saveBtn.textContent=editMode?'Save changes':'Save event';
   ['modal-player','modal-notes','sub-player-leaving','sub-player-entering'].forEach(id=>{let el=document.getElementById(id); if(el) el.value='';});
   clearAllTogs();
@@ -1599,40 +1801,34 @@ function openModal(type,isMissed,editMode){
   document.getElementById('officials-label').style.display=(isSub||isShootoutAttempt)?'none':'block';
   document.getElementById('modal-officials-chips').style.display=(isSub||isShootoutAttempt)?'none':'flex';
   document.getElementById('flag-section-wrap').style.display=(isSub||isShootoutAttempt)?'none':'block';
-  document.getElementById('missed-banner').style.display=isMissed?'flex':'none';
-  document.getElementById('btn-save-main').className='btn-save'+(isMissed?' missed-save':'');
-  document.getElementById('missed-card-type-wrap').style.display=(type==='Missed Card')?'block':'none';
-  configureOffsideSituationOptions(type==='Missed Offside');
-  document.getElementById('missed-offside-type-wrap').style.display=(type==='Missed Offside'||type==='Offside')?'block':'none';
-  document.getElementById('impact-wrap').style.display=isMissed?'block':'none';
+  document.getElementById('missed-banner').style.display=currentIsMissed?'flex':'none';
+  document.getElementById('btn-save-main').className='btn-save'+(currentIsMissed?' missed-save':'');
+  document.getElementById('mark-missed-wrap').style.display=isMissableType(currentEventType)?'block':'none';
+  document.getElementById('mark-missed-check').checked=currentIsMissed;
+  document.getElementById('missed-card-type-wrap').style.display=(isMissedCardOptionContext(currentEventType) && currentEventType!=='Offside')?'block':'none';
+  configureOffsideSituationOptions(false);
+  document.getElementById('missed-offside-type-wrap').style.display=(currentEventType==='Offside')?'block':'none';
+  document.getElementById('impact-wrap').style.display=currentIsMissed?'block':'none';
   const decTypes=['Foul','Yellow Card','Red Card','Penalty','VAR Review'];
-  let showDecision=(!isMissed && decTypes.includes(type));
+  let showDecision=(!currentIsMissed && decTypes.includes(currentEventType));
   document.getElementById('decision-wrap').style.display=showDecision?'block':'none';
-  document.getElementById('difficulty-wrap').style.display=(isMissed || showDecision)?'block':'none';
+  document.getElementById('difficulty-wrap').style.display=(currentIsMissed || showDecision || currentEventType==='Offside')?'block':'none';
   document.getElementById('incorrect-decision-wrap').style.display=['Corner Kick','Goal Kick'].includes(type)?'block':'none';
-  document.getElementById('also-foul-wrap').style.display=['Yellow Card','Red Card'].includes(type)?'block':'none';
+  document.getElementById('also-foul-wrap').style.display='none';
+  let cfw=document.getElementById('card-foul-type-wrap'); if(cfw) cfw.style.display=['Yellow Card','Red Card'].includes(currentEventType)?'block':'none';
   let isCard=['Yellow Card','Red Card'].includes(type);
   document.getElementById('card-reason-wrap').style.display=isCard?'block':'none';
-  if(isCard){
-    let lbl=document.getElementById('card-reason-label');
-    let grp=document.getElementById('tog-modal-card-reason');
-    grp.innerHTML='';
-    let yreasons=['UB-SPA','UB-Reckless','UB-DOGSO downgrade','UB-other','Dissent (DT)','Persistent Offenses (PO)','Delaying the Restart (DR)','FRD','ERL','TO - Other'];
-    let rreasons=['2CT','DOGSO-Foul','DOGSO-Handball','Serious Foul Play','Violent Conduct','Abusive Language','Spitting/Biting','TO - Other'];
-    let reasons=type==='Yellow Card'?yreasons:rreasons;
-    lbl.textContent=type==='Yellow Card'?'Yellow card reason':'Red card reason';
-    reasons.forEach(r=>{
-      let b=document.createElement('span');
-      b.className='tog-btn';b.textContent=r;
-      b.onclick=function(){setTog('modal-card-reason',this);};
-      grp.appendChild(b);
-    });
-  }
-  document.getElementById('to-warning-reason-wrap').style.display=(type==='Team Official Warning')?'block':'none';
+  if(isCard) renderCardReasonOptions(type);
+  document.getElementById('to-warning-reason-wrap').style.display=(type==='Team Official Warning'||type==='Missed Team Official Warning')?'block':'none';
   document.getElementById('shootout-result-wrap').style.display=isShootoutAttempt?'block':'none';
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
-  if(type==='Referee Note') resetNoteTeamToggles(); else selectTeam('home');
+  if(currentEventType==='Referee Note' || currentEventType==='Period Summary') resetNoteTeamToggles(); else selectTeam('home');
+  if(type==='Missed Yellow Card') activateTogByValue('missed-card-type','Yellow Card');
+  if(type==='Missed Red Card') activateTogByValue('missed-card-type','Red Card');
+  if(currentIsMissed && currentEventType==='Yellow Card') activateTogByValue('missed-card-type','Yellow Card');
+  if(currentIsMissed && currentEventType==='Red Card') activateTogByValue('missed-card-type','Red Card');
+  syncMissedCardReasonUI();
   updateImpactVisibility();
   document.getElementById('modal-bg').classList.add('open');
   setTimeout(()=>{let f=isSub?document.getElementById('sub-player-leaving'):document.getElementById('modal-player'); if(f)f.focus();},50);
@@ -1649,12 +1845,12 @@ function setTog(hiddenId, btn){
   if(!wasActive){btn.classList.add('active');if(hid)hid.value=btn.textContent.trim();}
   else{if(hid)hid.value='';}
   if(hiddenId==='modal-correctness') syncCREAvailability();
-  if(hiddenId==='missed-card-type') syncAutomaticCMI();
+  if(hiddenId==='missed-card-type'){ syncAutomaticCMI(); syncMissedCardReasonUI(); } 
 }
 
 function clearAllTogs(){
   document.querySelectorAll('#modal-bg .tog-group .tog-btn').forEach(b=>b.classList.remove('active'));
-  ['missed-card-type','missed-offside-type','modal-impact','modal-correctness','modal-difficulty','shootout-result','modal-card-reason','modal-to-reason'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});
+  ['missed-card-type','missed-offside-type','modal-impact','modal-correctness','modal-difficulty','shootout-result','modal-card-reason','modal-to-reason','card-foul-type'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});
 }
 
 function toggleSection(id, hdr){
@@ -1687,9 +1883,7 @@ function updateDifficultyOptions(){
   syncCREAvailability();
 }
 function updateImpactVisibility(){
-  let correctness=(document.getElementById('modal-correctness')||{}).value||'';
-  let incorrectBox=document.getElementById('incorrect-decision-check');
-  let show=!!currentIsMissed || correctness==='Incorrect' || !!(incorrectBox && incorrectBox.checked);
+  let show=!!currentIsMissed;
   let impactWrap=document.getElementById('impact-wrap');
   if(impactWrap) impactWrap.style.display=show?'block':'none';
   if(!show){
@@ -1700,6 +1894,97 @@ function updateImpactVisibility(){
   }
 }
 
+function isNonMissedYellowForSecondYellowCheck(e){
+  if(!e || e.missed) return false;
+  let t=String(e.type||'').toLowerCase();
+  let shown=String(displayEventType(e)||'').toLowerCase();
+  return t.indexOf('yellow')>=0 || shown.indexOf('yellow')>=0 || baseEventType(e.type)==='Yellow Card';
+}
+
+function samePlayerForSecondYellow(a,b){
+  if(!a || !b) return false;
+  if(a.team && b.team && a.team!==b.team) return false;
+  let ak=normalizePlayerKey(a.player||'');
+  let bk=normalizePlayerKey(b.player||'');
+  if(!ak || !bk) return false;
+  return ak===bk;
+}
+
+function openSecondYellowSendOffModal(ev){
+  if(!ev) return;
+  openModal('Red Card', false, false);
+  selectTeam(ev.team);
+  setModalTimeFields({minute:ev.minute,second:ev.second,periodName:ev.periodName,globalSec:ev.globalSec});
+  let playerEl=document.getElementById('modal-player');
+  if(playerEl) playerEl.value=ev.player||'';
+  activateTogByValue('modal-card-reason','2CT');
+  activateTogByValue('modal-correctness','Correct');
+  activateTogByValue('modal-difficulty','Routine');
+  updateDifficultyOptions();
+  updateImpactVisibility();
+  syncAutomaticCMI();
+  setModalFlagClasses();
+}
+
+function openSecondYellowMissedSendOffModal(ev){
+  if(!ev) return;
+  openModal('Red Card', true, false);
+  selectTeam(ev.team);
+  setModalTimeFields({minute:ev.minute,second:ev.second,periodName:ev.periodName,globalSec:ev.globalSec});
+  let playerEl=document.getElementById('modal-player');
+  if(playerEl) playerEl.value=ev.player||'';
+  let missedCheck=document.getElementById('mark-missed-check');
+  if(missedCheck) missedCheck.checked=true;
+  currentIsMissed=true;
+  syncMarkedMissedUI();
+  activateTogByValue('missed-card-type','Red Card');
+  syncMissedCardReasonUI();
+  activateTogByValue('modal-card-reason','2CT');
+  activateTogByValue('modal-correctness','Incorrect');
+  activateTogByValue('modal-difficulty','Routine');
+  updateDifficultyOptions();
+  updateImpactVisibility();
+  syncAutomaticCMI();
+  setModalFlagClasses();
+}
+
+function closeSecondYellowPromptOnly(){
+  let bg=document.getElementById('second-yellow-modal-bg');
+  if(bg) bg.classList.remove('open');
+}
+function secondYellowNo(){
+  let ev=pendingSecondYellowEvent;
+  pendingSecondYellowEvent=null;
+  closeSecondYellowPromptOnly();
+  if(ev) setTimeout(()=>openSecondYellowMissedSendOffModal(ev),60);
+}
+function secondYellowYes(){
+  let ev=pendingSecondYellowEvent;
+  pendingSecondYellowEvent=null;
+  closeSecondYellowPromptOnly();
+  if(ev) setTimeout(()=>openSecondYellowSendOffModal(ev),60);
+}
+function showSecondYellowPrompt(ev, count){
+  pendingSecondYellowEvent={...ev};
+  let bg=document.getElementById('second-yellow-modal-bg');
+  let msg=document.getElementById('second-yellow-message');
+  let teamName=ev.teamName || (ev.team==='home'?(document.getElementById('home-name').value||'Home'):(document.getElementById('away-name').value||'Away'));
+  let label=(teamName+' '+(ev.player||'')).trim();
+  if(msg) msg.textContent=label+' now has '+count+' yellow cards. Mark this player as Sent Off with a Red Card for 2CT?';
+  if(bg) bg.classList.add('open');
+  else if(confirm('This is the second yellow card for '+label+'. Mark this player as Sent Off with a Red Card for 2CT?')) openSecondYellowSendOffModal(ev);
+}
+
+function maybePromptSecondYellowSendOff(ev, wasEditing){
+  // Run only after a non-missed yellow card is saved. This intentionally uses broad matching
+  // so entries like "Home #7", "#7", and "home 7" are treated as the same player.
+  if(!ev || ev.missed || !isNonMissedYellowForSecondYellowCheck(ev) || !ev.player || !['home','away'].includes(ev.team)) return;
+  let yellowMatches=events.filter(e=>isNonMissedYellowForSecondYellowCheck(e) && samePlayerForSecondYellow(e,ev));
+  let alreadyRed=events.some(e=>!e.missed && baseEventType(e.type)==='Red Card' && samePlayerForSecondYellow(e,ev) && (String(e.cardReason||'').toUpperCase()==='2CT' || /2ct|second yellow/i.test(e.cardReason||'')));
+  if(yellowMatches.length>=2 && !alreadyRed){
+    setTimeout(()=>showSecondYellowPrompt(ev, yellowMatches.length),120);
+  }
+}
 function saveEvent(){
   let wasEditing=!!editingEventId;
   let player=document.getElementById('modal-player').value.trim();
@@ -1708,21 +1993,28 @@ function saveEvent(){
   if(currentEventType==='Substitution') player=['OFF: '+subLeaving,'ON: '+subEntering].filter(x=>!x.endsWith(': ')).join(' · ');
   let notes=document.getElementById('modal-notes').value.trim();
   let offsideSituation=(document.getElementById('missed-offside-type')||{}).value||'';
-  let correctness=currentIsMissed?'Incorrect':((currentEventType==='Offside')?'':((document.getElementById('modal-correctness')||{}).value||''));
+  let markedMissed=!!(document.getElementById('mark-missed-check')&&document.getElementById('mark-missed-check').checked);
+  let offsideIncorrect=/^Incorrect/.test(offsideSituation);
+  if(currentEventType==='Offside' && offsideSituation) currentIsMissed=offsideIncorrect; else currentIsMissed=markedMissed;
+  let correctness=currentEventType==='Offside'?(offsideIncorrect?'Incorrect':'Correct'):(currentIsMissed?'Incorrect':((document.getElementById('modal-correctness')||{}).value||''));
   if(isCorrectDecisionValue(correctness)) modalCRE=false;
-  let difficulty=(currentEventType==='Offside' && !currentIsMissed)?'':((document.getElementById('modal-difficulty')||{}).value||'');
+  let difficulty=((document.getElementById('modal-difficulty')||{}).value||'');
   let decision=correctness&&difficulty?correctness+' — '+difficulty:(correctness||difficulty);
   let cardReason=(document.getElementById('modal-card-reason')||{}).value||'';
   let toReason=(document.getElementById('modal-to-reason')||{}).value||'';
   let impact=document.getElementById('modal-impact').value;
   let missedCardType=document.getElementById('missed-card-type').value;
-  if(currentEventType==='Missed Yellow Card') missedCardType='Yellow Card';
-  if(currentEventType==='Missed Red Card') missedCardType='Red Card';
-  if(isAutoCMIEventType(currentEventType) || currentEventType==='Missed Red Card' || (currentEventType==='Missed Card' && /red/i.test(missedCardType||''))) modalCMI=true;
+  if(currentEventType==='Yellow Card' && currentIsMissed) missedCardType=missedCardType||'Yellow Card';
+  if(currentEventType==='Red Card' && currentIsMissed) missedCardType=missedCardType||'Red Card';
+  if(!currentIsMissed) missedCardType='';
+  if(isAutoCMIEventType(currentEventType) || currentEventType==='Missed Red Card' || (missedCardType && /red/i.test(missedCardType||''))) modalCMI=true;
   let missedOffsideType=offsideSituation;
-  let incorrectDecision=currentIsMissed?true:document.getElementById('incorrect-decision-check').checked;
+  let incorrectDecision=currentEventType==='Offside'?offsideIncorrect:(currentIsMissed?true:document.getElementById('incorrect-decision-check').checked);
+  if(!currentIsMissed && isCorrectDecisionValue(correctness)) incorrectDecision=false;
   let shootoutResult=document.getElementById('shootout-result').value;
-  let alsoFoul=document.getElementById('also-foul-check').checked;
+  let cardFoulType=(document.getElementById('card-foul-type')||{}).value||'';
+  let alsoFoul=document.getElementById('also-foul-check').checked || cardFoulType==='Foul';
+  let missedFoul=cardFoulType==='Missed Foul';
   let reviewLater=document.getElementById('review-later-check').checked;
   let teamSelection=getCurrentTeamSelection();
   let officials=(currentEventType==='Substitution'||currentEventType==='Shootout Attempt')?[]:Array.from(modalSelectedOfficials);
@@ -1730,7 +2022,7 @@ function saveEvent(){
   let subSameMoment=!!(currentEventType==='Substitution' && nextSubSameMoment && activeSubMomentTimestamp);
   let ts=subSameMoment?{...activeSubMomentTimestamp}:getModalTimeFields();
   if(currentEventType==='Substitution' && subsLimited && subsRestrictWindows && !activeSubMomentTimestamp){activeSubMomentTimestamp={...ts};}
-  let ev={id:editingEventId||Date.now(),type:currentEventType,missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:teamSelection.team,teamName:teamSelection.teamName,player,subLeaving,subEntering,subSameMoment,notes,decision,correctness,difficulty,cardReason,toReason,impact,missedCardType,missedOffsideType,incorrectDecision,shootoutResult,alsoFoul,reviewLater,officials,minute:ts.minute,second:ts.second,periodName:ts.periodName,globalSec:ts.globalSec};
+  let ev={id:editingEventId||Date.now(),type:baseEventType(currentEventType),missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:teamSelection.team,teamName:teamSelection.teamName,player,subLeaving,subEntering,subSameMoment,notes,decision,correctness,difficulty,cardReason,toReason,impact:currentIsMissed?impact:'',missedCardType:currentIsMissed?missedCardType:'',missedOffsideType,incorrectDecision,shootoutResult,alsoFoul,missedFoul,reviewLater,officials,minute:ts.minute,second:ts.second,periodName:ts.periodName,globalSec:ts.globalSec};
   pendingEventTimestamp=null;
   if(editingEventId){
     let idx=events.findIndex(e=>e.id===editingEventId);
@@ -1739,30 +2031,50 @@ function saveEvent(){
     events.unshift(ev);
   }
   editingEventId=null;
-  // Penalty counts as a foul
-  if(currentEventType==='Penalty') ev.alsoFoul=true;
-  // Missed Penalty counts as a missed foul for review purposes, but not as a recorded foul
-  if(currentEventType==='Missed Penalty'){ev.missed=true;ev.missedFoul=true;ev.alsoFoul=false;ev.cmi=true;}
+  // Penalty counts as a foul only when it was actually called. Missed calls count only as missed.
+  if(currentEventType==='Penalty' && !ev.missed) ev.alsoFoul=true;
+  if(ev.missed){ev.alsoFoul=false;if(currentEventType==='Penalty') ev.cmi=true;}
+  if(ev.missedFoul) ev.alsoFoul=false;
 
   recalculateScoreboards();
   updateShootoutTeamLabels();
   checkShootoutClinch();
   updateStats();renderLog();updateTypeFilterChips();saveState();closeModal();
+  maybePromptSecondYellowSendOff(ev, wasEditing);
   if(currentEventType==='Substitution' && subsLimited && subsRestrictWindows && !wasEditing){
     setTimeout(()=>askSameSubMoment(),120);
   }
 }
 
+
+function normalizeEventMarkers(ev){
+  if(!ev) return ev;
+  // When an edited event is changed from missed to given, clear old missed-only labels/markers.
+  if(!ev.missed){
+    ev.missedCardType='';
+    ev.impact='';
+    if(isCorrectDecisionValue(ev.correctness) || eventHasCorrectDecision(ev)){
+      ev.incorrectDecision=false;
+      ev.cre=false;
+    }
+  } else {
+    ev.incorrectDecision=true;
+  }
+  if(isCorrectDecisionValue(ev.correctness) || eventHasCorrectDecision(ev)) ev.cre=false;
+  return ev;
+}
+
 function updateStats(){
   events.forEach(e=>{
+    normalizeEventMarkers(e);
     if(eventHasCorrectDecision(e)) e.cre=false;
-    if(['Penalty','Red Card','Missed Penalty','Missed Red Card'].includes(e.type) || (e.type==='Missed Card' && /red/i.test(e.missedCardType||''))) e.cmi=true;
+    if(['Penalty','Red Card','Missed Penalty','Missed Red Card'].includes(e.type) || (e.missed && e.missedCardType && /red/i.test(e.missedCardType||''))) e.cmi=true;
   });
   let team=statsTeam;
   let f=team==='all'?events:events.filter(e=>e.team===team);
-  document.getElementById('stat-fouls').textContent=f.filter(e=>e.type==='Foul'||e.type==='Penalty'||(e.alsoFoul&&['Yellow Card','Red Card'].includes(e.type))).length;
-  document.getElementById('stat-yellows').textContent=f.filter(e=>e.type==='Yellow Card').length;
-  document.getElementById('stat-reds').textContent=f.filter(e=>e.type==='Red Card').length;
+  document.getElementById('stat-fouls').textContent=f.filter(isRecordedFoulEvent).length;
+  document.getElementById('stat-yellows').textContent=f.filter(e=>!e.missed && baseEventType(e.type)==='Yellow Card').length;
+  document.getElementById('stat-reds').textContent=f.filter(e=>!e.missed && baseEventType(e.type)==='Red Card').length;
   let mc=events.filter(e=>e.missed).length,cmic=events.filter(e=>e.cmi).length,crec=events.filter(e=>e.cre).length,rc=events.filter(e=>e.reviewLater).length;
   document.getElementById('stat-missed').textContent=mc;
   document.getElementById('stat-cmi').textContent=cmic;
@@ -1789,7 +2101,7 @@ function setOfficialFilter(val){
 }
 
 function updateTypeFilterChips(){
-  let usedTypes=[...new Set(events.flatMap(e=>{let arr=e.missedFoul?[e.type,'Missed Foul']:[e.type]; if(e.type==='Penalty') arr.push('Foul'); return arr;}))].sort();
+  let usedTypes=[...new Set(events.flatMap(e=>{let arr=[displayEventType(e)]; if(displayEventType(e)==='Penalty'||e.missedFoul) arr.push('Foul'); return arr;}))].filter(Boolean).sort();
   let row=document.getElementById('type-filter-row');row.innerHTML='';
   // Show/hide official filter row based on whether any event has officials
   let anyOfficials=events.some(e=>e.officials&&e.officials.length>0);
@@ -1809,8 +2121,25 @@ function updateTypeFilterChips(){
   });
 }
 
-const typeIcons={'Goal':'ti-ball-football','Yellow Card':'ti-square','Red Card':'ti-square','Foul':'ti-alert-triangle','Penalty':'ti-circle-dot','Offside':'ti-flag','Corner Kick':'ti-corner-up-right','Goal Kick':'ti-arrow-back-up','Substitution':'ti-arrows-exchange','Injury':'ti-first-aid-kit','VAR Review':'ti-device-tv','Referee Note':'ti-notes','Team Official Warning':'ti-alert-octagon','Missed Foul':'ti-alert-triangle','Missed Card':'ti-square','Missed Yellow Card':'ti-square','Missed Red Card':'ti-square','Missed Offside':'ti-flag','Missed Goal':'ti-ball-football','Missed Penalty':'ti-circle-dot','Shootout Attempt':'ti-target-arrow'};
+const typeIcons={'Goal':'ti-ball-football','Yellow Card':'ti-square','Red Card':'ti-square','Foul':'ti-alert-triangle','Penalty':'ti-circle-dot','Offside':'ti-flag','Corner Kick':'ti-corner-up-right','Goal Kick':'ti-arrow-back-up','Substitution':'ti-arrows-exchange','Injury':'ti-first-aid-kit','VAR Review':'ti-device-tv','Referee Note':'ti-notes','Team Official Warning':'ti-alert-octagon','Throw-in':'ti-arrow-autofit-right','Missed Foul':'ti-alert-triangle','Missed Card':'ti-square','Missed Yellow Card':'ti-square','Missed Red Card':'ti-square','Missed Offside':'ti-flag','Missed Goal':'ti-ball-football','Missed Penalty':'ti-circle-dot','Shootout Attempt':'ti-target-arrow','Missed Team Official Warning':'ti-alert-octagon'};
 
+function eventButtonStyle(ev){
+  let base=displayEventType(ev);
+  const styles={
+    'Goal':['#639922','#EAF3DE'],'Yellow Card':['#BA7517','#FAEEDA'],'Red Card':['#A32D2D','#FCEBEB'],
+    'Foul':['#185FA5','#E6F1FB'],'Penalty':['#993556','#FBEAF0'],'Offside':['#888780','#F1EFE8'],
+    'Corner Kick':['#0F6E56','#E1F5EE'],'Goal Kick':['#0F6E56','#E1F5EE'],'Throw-in':['#0F6E56','#E1F5EE'],
+    'Substitution':['#533AB7','#EEEDFE'],'Injury':['#D85A30','#FAECE7'],'VAR Review':['#185FA5','#E6F1FB'],
+    'Referee Note':['#5F5E5A','#F1EFE8'],'Team Official Warning':['#7A5800','#FFF8E6'],'Period Summary':['#5F5E5A','#F1EFE8'],
+    'Shootout Attempt':['#3B6D11','#EAF3DE']
+  };
+  let st=styles[base]||['var(--color-border-tertiary)','var(--color-background-primary)'];
+  return 'border-color:'+st[0]+';background:'+st[1]+';';
+}
+function noteDisplayType(ev){
+  if(ev.type==='Referee Note' && ev.noteSequence) return 'Referee Note #'+ev.noteSequence;
+  return displayEventType(ev);
+}
 function renderLog(){
   let el=document.getElementById('event-log');
   let filtered=events;
@@ -1818,7 +2147,7 @@ function renderLog(){
   else if(activeTab==='cmi')filtered=filtered.filter(e=>e.cmi);
   else if(activeTab==='cre')filtered=filtered.filter(e=>e.cre);
   else if(activeTab==='review')filtered=filtered.filter(e=>e.reviewLater);
-  if(activeTypeFilters.size>0)filtered=filtered.filter(e=>activeTypeFilters.has(e.type)||(activeTypeFilters.has('Foul')&&(e.type==='Penalty'||(e.alsoFoul&&['Yellow Card','Red Card'].includes(e.type))))||(activeTypeFilters.has('Missed Foul')&&e.missedFoul));
+  if(activeTypeFilters.size>0)filtered=filtered.filter(e=>Array.from(activeTypeFilters).some(t=>typeMatchesFilter(e,t))); 
   if(activeOfficialFilter==='none'){filtered=filtered.filter(e=>!e.officials||e.officials.length===0);}
   else if(activeOfficialFilter!=='all'){filtered=filtered.filter(e=>e.officials&&e.officials.includes(activeOfficialFilter));}
   if(!filtered.length){
@@ -1826,19 +2155,34 @@ function renderLog(){
     el.innerHTML='<div class="log-empty">'+(msgs[activeTab]||'No events match filter')+'</div>';return;
   }
   el.innerHTML=filtered.map(ev=>{
-    let ico=typeIcons[ev.type]||'ti-circle';
+    let shownType=noteDisplayType(ev);
+    let ico=typeIcons[shownType]||typeIcons[ev.type]||'ti-circle';
     let subOverLimit=isSubEventOverLimit(ev);
-    let extras=[ev.subSameMoment?'same substitution moment':null,getSubStatusForEvent(ev),ev.missedCardType,ev.missedOffsideType,ev.impact,ev.shootoutResult].filter(Boolean);
+    let foulCount=isRecordedFoulEvent(ev)?countTeamFoulsAtEvent(ev):'';
+    let extras=[ev.subSameMoment?'same substitution moment':null,getSubStatusForEvent(ev),foulCount?('Team foul #'+foulCount):null,ev.missedFoul?'Missed foul':null,(ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null,ev.missedOffsideType,ev.missed?ev.impact:null,ev.shootoutResult].filter(Boolean);
     let decParts=[ev.cardReason||ev.toReason,ev.decision].filter(Boolean);
     let details=[ev.player,...extras,...decParts,ev.notes].filter(Boolean).join(' · ');
     let itemClass='event-item'+(ev.missed?' missed-item':'')+(ev.cmi?' cmi-item':'')+(ev.cre?' cre-item':'')+(ev.reviewLater?' review-item':'');
-    let officialTags=ev.officials.map(o=>'<span class="tag-official">'+o+'</span>').join('');
+    let officialTags=ev.officials.map(o=>'<span class="tag-official">'+officialDisplayLabel(o)+'</span>').join('');
     let evTimeStr=eventTimeStr(ev);
     let noEvalActions=['Substitution','Shootout Attempt'].includes(ev.type);
-    let actionBtns=noEvalActions?'':('<button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?ev.officials.join('+'):'Offs')+'</button>');
+    let duplicateBtn=(ev.type==='Referee Note')?'<button class="duplicate-note-btn" onclick="duplicateNote('+ev.id+')">Duplicate</button>':'';
+    let actionBtns=noEvalActions?duplicateBtn:(duplicateBtn+'<button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?ev.officials.join('+'):'Offs')+'</button>');
     let editDeleteBtns='<button class="edit-btn" onclick="openEditModal('+ev.id+')" title="Edit event"><i class="ti ti-pencil"></i></button><button class="del-btn" onclick="deleteEvent('+ev.id+')" title="Delete event"><i class="ti ti-x"></i></button>';
-    return '<div class="'+itemClass+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+ev.type+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags"><span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>'+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+(ev.type==='Penalty'?'<span class="tag-missed">+ Foul</span>':'')+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
+    return '<div class="'+itemClass+'" style="'+eventButtonStyle(ev)+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+shownType+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags">'+(ev.teamName?'<span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>':'')+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+(ev.type==='Penalty'?'<span class="tag-missed">+ Foul</span>':'')+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
   }).join('');
+}
+
+function duplicateNote(id){
+  let ev=events.find(e=>e.id===id);
+  if(!ev || ev.type!=='Referee Note') return;
+  let group=ev.noteGroupId || ev.id;
+  if(!ev.noteGroupId){ev.noteGroupId=group;ev.noteSequence=ev.noteSequence||1;}
+  let maxSeq=Math.max(1,...events.filter(e=>e.type==='Referee Note' && (e.noteGroupId||e.id)===group).map(e=>e.noteSequence||1));
+  let ts=captureEventTimestamp();
+  let copy={...ev,id:Date.now()+Math.floor(Math.random()*1000),noteGroupId:group,noteSequence:maxSeq+1,minute:ts.minute,second:ts.second,periodName:ts.periodName,globalSec:ts.globalSec};
+  events.unshift(copy);
+  updateStats();renderLog();updateTypeFilterChips();saveState();
 }
 
 function toggleEventFlag(id,flag){let ev=events.find(e=>e.id===id);if(ev){if(flag==='cre'&&eventHasCorrectDecision(ev)){ev.cre=false;updateStats();renderLog();return;}if(flag==='cmi'&&(['Penalty','Red Card','Missed Penalty','Missed Red Card'].includes(ev.type)||(ev.type==='Missed Card'&&/red/i.test(ev.missedCardType||'')))){ev.cmi=true;updateStats();renderLog();return;}ev[flag]=!ev[flag];updateStats();renderLog();}}
@@ -1859,9 +2203,15 @@ function openOfficialsPopover(eventId,btnEl){
   });
   let popover=document.getElementById('officials-popover');
   let rect=btnEl.getBoundingClientRect();
-  let top=rect.bottom+4,left=rect.left;
-  if(left+190>window.innerWidth)left=window.innerWidth-198;
-  popover.style.top=top+'px';popover.style.left=left+'px';popover.style.display='block';
+  popover.style.visibility='hidden';
+  popover.style.display='block';
+  let popW=popover.offsetWidth||190;
+  let popH=popover.offsetHeight||160;
+  let top=rect.bottom+4, left=rect.left;
+  if(left+popW+8>window.innerWidth) left=Math.max(8, window.innerWidth-popW-8);
+  if(top+popH+8>window.innerHeight) top=Math.max(8, rect.top-popH-4);
+  top=Math.min(Math.max(8, top), Math.max(8, window.innerHeight-popH-8));
+  popover.style.top=top+'px';popover.style.left=left+'px';popover.style.visibility='visible';
   document.getElementById('popover-bg').classList.add('open');
 }
 function closePopover(){document.getElementById('officials-popover').style.display='none';document.getElementById('popover-bg').classList.remove('open');popoverEventId=null;}
@@ -1876,74 +2226,153 @@ function getSummary(){
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   let fmt=e=>{
     let flags=[e.missed?'MISSED':null,e.cmi?'CMI':null,e.cre?'CRE':null,e.incorrectDecision?'INCORRECT-DECISION':null].filter(Boolean).join(',');
-    let extras=[e.missedCardType,e.missedOffsideType,e.impact,e.shootoutResult,e.cardReason,e.toReason].filter(Boolean).join(', ');
-    let offs=e.officials.length?'['+e.officials.join('+')+']':'';
-    return pad(e.minute)+':'+pad(e.second||0)+' '+(e.periodName?'('+e.periodName+') ':'')+(flags?'['+flags+'] ':'')+' ['+e.type+'] '+e.teamName+(offs?' '+offs:'')+(e.player?' - '+e.player:'')+(extras?' {'+extras+'}':'')+(e.decision?' ['+e.decision+']':'')+(e.notes?' - '+e.notes:'');
+    let extras=[e.missedFoul?'Missed foul':'',e.missedCardType?('Missed '+e.missedCardType):'',e.missedOffsideType,e.missed?e.impact:'',e.shootoutResult,e.cardReason,e.toReason,e.stoppageTime?('Stoppage '+e.stoppageTime):''].filter(Boolean).join(', ');
+    let offList=(e.officials||[]); let offs=offList.length?'['+offList.join('+')+']':'';
+    return pad(e.minute)+':'+pad(e.second||0)+' '+(e.periodName?'('+e.periodName+') ':'')+(flags?'['+flags+'] ':'')+' ['+noteDisplayType(e)+'] '+(e.teamName||'')+(offs?' '+offs:'')+(e.player?' - '+e.player:'')+(extras?' {'+extras+'}':'')+(e.decision?' ['+e.decision+']':'')+(e.notes?' - '+e.notes:'');
   };
   let officialBreakdown=OFFICIALS.map(o=>{
-    let oEvs=events.filter(e=>e.officials.includes(o.id));
+    let oEvs=events.filter(e=>(e.officials||[]).includes(o.id));
     if(!oEvs.length)return o.label+': No events assigned';
     return o.label+':\n'+oEvs.slice().reverse().map(e=>'  '+pad(e.minute)+':'+pad(e.second||0)+' ['+e.type+']'+(e.cmi?' CMI':'')+(e.cre?' CRE':'')+(e.decision?' - '+e.decision:'')+(e.notes?' - '+e.notes:'')).join('\n');
   }).join('\n\n');
   let periodSummary=periods.map(p=>p.name+(p.length?' ('+p.length+' min)':'')).join(', ');
-  return 'Match: '+match+(comp?' | '+comp:'')+'\nVAR: '+(varEnabled?'Used':'Not Used')+'\nPeriod lengths: '+getPeriodLengthSummary()+'\nSubstitution rules: '+getSubRuleSummary()+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee: '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nALL EVENTS:\n'+( events.slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(events.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(events.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(events.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
+  return 'Match: '+match+(comp?' | '+comp:'')+'\nVAR: '+(varEnabled?'Used':'Not Used')+'\nPeriod lengths: '+getPeriodLengthSummary()+'\nSubstitution rules: '+getSubRuleSummary()+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee: '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nALL EVENTS:\n'+( events.slice().reverse().map(fmt).join('\n')||'None')+'\n\nPERIOD SUMMARY NOTES:\n'+(events.filter(e=>e.type==='Period Summary').slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(events.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(events.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(events.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
 }
 
-function exportLog(){let blob=new Blob([getSummary()],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='match_log.txt';a.click();}
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c;});
+}
+
+
+function sanitizeFilenamePart(value, fallback){
+  let text=String(value==null?"":value).trim();
+  if(!text) text=fallback||"";
+  text=text.replace(/[<>:"/\\|?*]+/g,"").replace(/\s+/g," " ).trim();
+  return text || fallback || "";
+}
+
+function getMatchLogDateForFilename(){
+  let raw=(document.getElementById('match-info')?.value||"").trim();
+  let found=raw.match(/\b(\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}|\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4})\b/);
+  if(found) return found[1].replace(/[\/.]/g,'-');
+  let d=new Date();
+  let yyyy=d.getFullYear();
+  let mm=String(d.getMonth()+1).padStart(2,'0');
+  let dd=String(d.getDate()).padStart(2,'0');
+  return yyyy+'-'+mm+'-'+dd;
+}
+
+function getExportFilename(extension){
+  let refName=sanitizeFilenamePart(document.getElementById('ref-name')?.value, 'Unknown Referee');
+  let matchDate=sanitizeFilenamePart(getMatchLogDateForFilename(), new Date().toISOString().slice(0,10));
+  extension=String(extension||'txt').replace(/^\./,'');
+  return 'Match Log '+refName+' '+matchDate+'.'+extension;
+}
+
+function safeDownload(filename, content, mimeType){
+  try{
+    let blob=new Blob([content],{type:mimeType||'text/plain'});
+    let url=URL.createObjectURL(blob);
+    let a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(url);}catch(e){} try{a.remove();}catch(e){}},250);
+    return true;
+  }catch(err){
+    console.error('Download failed:',err);
+    return false;
+  }
+}
+
+
+
+function showExportFallback(title, content, mimeType, filename){
+  let old=document.getElementById('export-fallback-bg');
+  if(old) old.remove();
+  let bg=document.createElement('div');
+  bg.id='export-fallback-bg';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;';
+  let box=document.createElement('div');
+  box.style.cssText='background:var(--color-background-primary,#fff);color:var(--color-text-primary,#111);border:1px solid var(--color-border-tertiary,#ddd);border-radius:12px;padding:14px;width:min(720px,96vw);max-height:92vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.25);';
+  let h=document.createElement('h3'); h.textContent=title; h.style.cssText='font-size:16px;margin:0 0 8px;';
+  let p=document.createElement('p'); p.textContent='If the file did not download automatically, use the download link below or copy the text.'; p.style.cssText='font-size:12px;color:var(--color-text-secondary,#555);margin:0 0 8px;';
+  let link=document.createElement('a');
+  try{
+    let blob=new Blob([content],{type:mimeType||'text/plain;charset=utf-8'});
+    let url=URL.createObjectURL(blob);
+    link.href=url; link.download=filename; link.textContent='Download '+filename;
+  }catch(e){ link.href='#'; link.textContent='Download unavailable'; }
+  link.style.cssText='display:inline-block;margin:0 8px 10px 0;border:1px solid var(--color-border-info,#185FA5);border-radius:7px;padding:6px 10px;color:var(--color-text-info,#185FA5);text-decoration:none;font-size:13px;';
+  let close=document.createElement('button'); close.textContent='Close'; close.type='button'; close.style.cssText='border:1px solid var(--color-border-secondary,#ccc);border-radius:7px;background:transparent;padding:6px 10px;cursor:pointer;font-size:13px;color:inherit;'; close.onclick=function(){bg.remove();};
+  let ta=document.createElement('textarea');
+  ta.value=content;
+  ta.style.cssText='width:100%;height:55vh;border:1px solid var(--color-border-tertiary,#ddd);border-radius:8px;padding:8px;font-family:monospace;font-size:12px;background:var(--color-background-secondary,#f7f7f7);color:inherit;';
+  box.appendChild(h); box.appendChild(p); box.appendChild(link); box.appendChild(close); box.appendChild(ta); bg.appendChild(box); document.body.appendChild(bg);
+}
+
+function exportLog(){
+  try{
+    let txt=getSummary();
+    safeDownload(getExportFilename('txt'),txt,'text/plain;charset=utf-8');
+    showExportFallback('TXT Export', txt, 'text/plain;charset=utf-8', getExportFilename('txt'));
+  }catch(err){
+    console.error('TXT export error:',err);
+    alert('Could not export TXT log: '+(err&&err.message?err.message:err));
+  }
+}
 
 function exportLogHtml(){
-  let hn=document.getElementById('home-name').value||'Home';
-  let an=document.getElementById('away-name').value||'Away';
-  let match=document.getElementById('match-info').value||'';
-  let comp=document.getElementById('competition').value||'';
-  let isDark=document.body.classList.contains('dark');
-  let tagColors={'tag-home':'background:#E6F1FB;color:#185FA5','tag-away':'background:#FAEEDA;color:#854F0B','tag-both':'background:#E1F5EE;color:#085041','tag-none':'background:#F1EFE8;color:#444441','tag-missed':'background:#FCEBEB;color:#791F1F','tag-cmi':'background:#FFF3CD;color:#7A5800;border:0.5px solid #C49A00;font-weight:600','tag-cre':'background:#F3E8FF;color:#5B1FA5;border:0.5px solid #8B3FC8;font-weight:600','tag-official':'background:#E6F1FB;color:#185FA5;border:0.5px solid #185FA5;font-weight:600','tag-incorrect':'background:#FCEBEB;color:#791F1F;border:0.5px solid #A32D2D'};
-  let rows=events.slice().reverse().map(ev=>{
-    let ico='●';
-    let extras=[ev.subSameMoment?'same substitution moment':null,getSubStatusForEvent(ev),ev.missedCardType,ev.missedOffsideType,ev.impact,ev.shootoutResult].filter(Boolean);
-    let decParts=[ev.cardReason||ev.toReason,ev.decision].filter(Boolean);
-    let details=[ev.player,...extras,...decParts,ev.notes].filter(Boolean).join(' · ');
-    let teamTag=ev.missed?'tag-missed':(ev.team==='home'?'tag-home':ev.team==='away'?'tag-away':ev.team==='both'?'tag-both':'tag-none');
-    let tagStyle=tagColors[teamTag]||'';
-    let officialSpans=ev.officials.map(o=>'<span style="'+tagColors['tag-official']+';font-size:9px;padding:1px 5px;border-radius:99px;display:inline-block;">'+o+'</span>').join(' ');
-    let badges=[
-      ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'',
-      ev.reviewLater?'<span style="font-size:9px;font-weight:700;color:#7A5800;background:#FFF3CD;border-radius:3px;padding:1px 4px;border:0.5px solid #C49A00">⚑ REVIEW</span>':'',
-      ev.cmi?'<span style="'+tagColors['tag-cmi']+';font-size:9px;padding:1px 5px;border-radius:4px;display:inline-block;">CMI</span>':'',
-      ev.cre?'<span style="'+tagColors['tag-cre']+';font-size:9px;padding:1px 5px;border-radius:4px;display:inline-block;">CRE</span>':'',
-      ev.missedFoul?'<span style="background:#FCEBEB;color:#791F1F;border:0.5px solid #A32D2D;font-size:9px;padding:1px 5px;border-radius:4px;display:inline-block;">+ Missed Foul</span>':'',
-      ev.alsoFoul&&ev.type!=='Foul'&&ev.type!=='Penalty'&&!ev.missedFoul?'<span style="background:#E6F1FB;color:#185FA5;border:0.5px solid #185FA5;font-size:9px;padding:1px 5px;border-radius:4px;display:inline-block;">+ Foul</span>':'',
-      ev.incorrectDecision?'<span style="'+tagColors['tag-incorrect']+';font-size:9px;padding:1px 5px;border-radius:4px;display:inline-block;">Incorrect decision</span>':'',
-    ].filter(Boolean).join(' ');
-    let evTimeStr=eventTimeStr(ev);
-    let bg=ev.cre?'#FAF5FF':ev.cmi?'#FFFDF0':ev.missed?'#FFFAFA':'';
-    let border=ev.cre?'#8B3FC8':ev.cmi?'#C49A00':ev.missed?'#F7C1C1':'#e0dfdb';
-    return '<tr><td style="padding:7px 8px;font-family:monospace;font-size:11px;color:var(--muted);white-space:nowrap;vertical-align:top;">'+evTimeStr+'</td><td style="padding:7px 8px;vertical-align:top;"><div style="font-size:12px;font-weight:500;">'+badges+' '+ev.type+'</div>'+(details?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+details+'</div>':'')+'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;"><span style="'+tagStyle+';font-size:10px;padding:1px 6px;border-radius:4px;display:inline-block;">'+ev.teamName+'</span>'+(ev.periodName?'<span style="font-size:10px;color:var(--faint);">'+ev.periodName+'</span>':'')+officialSpans+'</div></td></tr>';
-  }).join('');
-  let initialTheme=isDark?'dark':'light';
-  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title>'
-    +'<style>'
-    +':root{--bg:#fff;--text:#1a1a1a;--muted:#555;--faint:#888;--border:#e0dfdb;--panel:#f4f4f3;--row:#fff;}'
-    +'body.dark{--bg:#1c1c1e;--text:#f0f0ee;--muted:#c7c7cc;--faint:#9a9aa0;--border:#3a3a3c;--panel:#2c2c2e;--row:#232326;}'
-    +'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:700px;margin:2rem auto;padding:0 1rem;background:var(--bg);color:var(--text);}'
-    +'p{color:var(--muted);} table{width:100%;border-collapse:collapse;border:0.5px solid var(--border);border-radius:8px;overflow:hidden;} tr{border-bottom:0.5px solid var(--border);} thead tr{background:var(--panel);} th{padding:7px 8px;text-align:left;font-size:11px;color:var(--faint);font-weight:500;} td{background:var(--row);} .theme-toggle{position:fixed;top:12px;right:12px;border:0.5px solid var(--border);background:var(--panel);color:var(--text);border-radius:7px;padding:6px 10px;cursor:pointer;font-size:12px;}'
-    +'</style></head><body class="'+initialTheme+'">'
-    +'<button class="theme-toggle" onclick="document.body.classList.toggle(\'dark\');this.textContent=document.body.classList.contains(\'dark\')?\'☀️ Light mode\':\'🌙 Dark mode\';">'+(isDark?'☀️ Light mode':'🌙 Dark mode')+'</button>'
-    +'<h2 style="font-size:18px;font-weight:500;margin-bottom:4px;">Match Event Log</h2>'
-    +(match?'<p style="font-size:13px;margin-bottom:2px;">'+match+'</p>':'')
-    +(comp?'<p style="font-size:13px;margin-bottom:2px;">'+comp+'</p>':'')
-    +'<p style="font-size:13px;margin-bottom:2px;">VAR: '+(varEnabled?'Used':'Not Used')+'</p>'
-    +'<p style="font-size:13px;margin-bottom:2px;">Period lengths: '+getPeriodLengthSummary()+'</p>'
-    +'<p style="font-size:13px;margin-bottom:2px;">Substitution rules: '+getSubRuleSummary()+'</p>'
-    +'<p style="font-size:13px;margin-bottom:16px;">'+hn+' '+homeScore+' – '+awayScore+' '+an+'</p>'
-    +'<table>'
-    +'<thead><tr><th>Time</th><th>Event</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<p style="font-size:11px;color:var(--faint);margin-top:12px;">Exported '+new Date().toLocaleString()+'</p>'
-    +'</body></html>';
-  let blob=new Blob([html],{type:'text/html'});
-  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='match_log.html';a.click();
+  try{
+    let hn=document.getElementById('home-name').value||'Home';
+    let an=document.getElementById('away-name').value||'Away';
+    let match=document.getElementById('match-info').value||'';
+    let comp=document.getElementById('competition').value||'';
+    let exported=events.slice().reverse().map(ev=>({
+      time:eventTimeStr(ev),
+      type:displayEventType(ev),
+      shown:noteDisplayType(ev),
+      missed:!!ev.missed,
+      cmi:!!ev.cmi,
+      cre:!!ev.cre,
+      review:!!ev.reviewLater,
+      officials:ev.officials||[],
+      teamName:ev.teamName||'',
+      teamStyle:teamTagStyle(ev)||'',
+      periodName:ev.periodName||'',
+      style:eventButtonStyle(ev)||'',
+      details:[ev.player, ev.missedFoul?'Missed foul':null, (ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null, ev.missedOffsideType, ev.missed?ev.impact:null, ev.shootoutResult, ev.cardReason||ev.toReason, ev.decision, ev.notes].filter(Boolean).join(' · ')
+    }));
+    let types=[...new Set(exported.flatMap(e=>{let a=[e.type]; if(e.type==='Penalty'||/Missed foul/.test(e.details)) a.push('Foul'); return a;}))].filter(Boolean).sort();
+    let typeButtons=types.map(t=>'<button type="button" onclick="setType('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
+    let exportedJson=JSON.stringify(exported).replace(/</g,'\\u003c');
+    let exportedScript = ''+
+      'var data='+exportedJson+';var tab="all";var typ="all";'+
+      'function esc(s){return String(s||"").replace(/[&<>\\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\\"":"&quot;"}[c]||c;});}'+
+      'function rowHtml(e){var h="<div class=\\"row\\" style=\\""+(e.style||"")+"\\">";h+="<div class=\\"time\\">"+esc(e.time)+"</div>";h+="<div class=\\"title\\">"+(e.missed?"<span class=\\"tag missed\\">MISSED</span> ":"")+esc(e.shown)+"</div>";if(e.details){h+="<div class=\\"detail\\">"+esc(e.details)+"</div>";}h+="<div>";if(e.teamName){h+="<span class=\\"tag\\">"+esc(e.teamName)+"</span>";}if(e.periodName){h+="<span class=\\"tag\\">"+esc(e.periodName)+"</span>";}if(e.cmi){h+="<span class=\\"tag cmi\\">CMI</span>";}if(e.cre){h+="<span class=\\"tag cre\\">CRE</span>";}if(e.review){h+="<span class=\\"tag review\\">REVIEW</span>";}h+="</div></div>";return h;}'+
+      'function matches(e){return (tab==="all"||(tab==="missed"&&e.missed)||(tab==="cmi"&&e.cmi)||(tab==="cre"&&e.cre)||(tab==="review"&&e.review))&&(typ==="all"||e.type===typ||(typ==="Foul"&&/Missed foul/.test(e.details)));}'+
+      'function draw(){var out=data.filter(matches).map(rowHtml).join("");document.getElementById("rows").innerHTML=out||"<p>No events match filter.</p>";}'+
+      'function setTab(t,b){tab=t;var btns=b.parentNode.querySelectorAll("button");for(var i=0;i<btns.length;i++){btns[i].classList.remove("active");}b.classList.add("active");draw();}'+
+      'function setType(t,b){typ=t;var btns=b.parentNode.querySelectorAll("button");for(var i=0;i<btns.length;i++){btns[i].classList.remove("active");}b.classList.add("active");draw();}'+
+      'draw();';
+    let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title><style>'+ 
+      'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
+      '</style></head><body>'+ 
+      '<h2>Match Event Log</h2>'+(match?'<p class="meta">'+escapeHtml(match)+'</p>':'')+(comp?'<p class="meta">'+escapeHtml(comp)+'</p>':'')+'<p class="meta">'+escapeHtml(hn)+' '+homeScore+' – '+awayScore+' '+escapeHtml(an)+'</p>'+ 
+      '<div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Missed</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
+      '<div class="filters"><button type="button" class="active" onclick="setType(\'all\',this)">All types</button>'+typeButtons+'</div><div id="rows"></div>'+ 
+      '<script>'+exportedScript+'<\/script>'+ 
+      '<p style="font-size:11px;color:#888">Exported '+escapeHtml(new Date().toLocaleString())+'</p></body></html>';
+    safeDownload(getExportFilename('html'),html,'text/html;charset=utf-8');
+    showExportFallback('HTML Export', html, 'text/html;charset=utf-8', getExportFilename('html'));
+  }catch(err){
+    console.error('HTML export error:',err);
+    alert('Could not export HTML log: '+(err&&err.message?err.message:err));
+  }
 }
+
 function copyForEval(){navigator.clipboard.writeText('Generate a detailed referee evaluation report based on this match data:\n\n'+getSummary()).then(()=>alert('Match data copied to clipboard. Paste it in a new Claude chat to generate the evaluation report.')).catch(()=>{let ta=document.createElement('textarea');ta.value=getSummary();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Copied! Paste in a new Claude chat for evaluation.');});}
 
 document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
@@ -2025,6 +2454,7 @@ function startNewMatch(){
   document.getElementById('shootout-display').style.display='none';
   closeNewMatchModal();
   renderPeriodPills();
+  applyTeamColors();applyRefereeColor();
   updateClockDisplay();
   updateStats();
   renderLog();
@@ -2313,6 +2743,7 @@ updateEventSectionVisibility();
 // ── Boot ─────────────────────────────────────────────────────────────────────
 if(loadState()){
   renderPeriodPills();
+  applyTeamColors();applyRefereeColor();
   updateStats();
   renderLog();
   updateTypeFilterChips();
@@ -2334,6 +2765,7 @@ if(loadState()){
   setTimeout(()=>toast.remove(), 5000);
 } else {
   renderPeriodPills();
+  applyTeamColors();applyRefereeColor();
   updateClockDisplay();
   updateEventSectionVisibility();
   // Show new match modal on first load
