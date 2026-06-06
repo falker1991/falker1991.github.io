@@ -173,13 +173,17 @@ body.dark .area-options-btn { background:rgba(44,44,46,0.72); }
 /* Modal */
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
 .modal-bg.open { display: flex; }
-.modal, .clock-modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.1rem; width: 380px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
+.modal, .clock-modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.1rem; width: 700px; max-width: 96vw; max-height: 92vh; overflow-y: auto; }
 .clock-modal { width: 320px; }
 .modal h3, .clock-modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 0.9rem; }
 .modal-missed-banner { background: #FFF5F5; border: 0.5px solid #A32D2D; border-radius: var(--border-radius-md); padding: 6px 9px; font-size: 12px; color: #791F1F; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
 .modal label, .clock-modal label { font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 3px; }
 .modal input, .modal select, .modal textarea, .clock-modal input, .clock-modal select { width: 100%; margin-bottom: 9px; font-size: 13px; }
 .modal textarea { height: 52px; resize: vertical; }
+
+.modal-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:700px){.modal-two-col{grid-template-columns:1fr;}}
+
 .modal-btns { display: flex; gap: 7px; justify-content: flex-end; margin-top: 5px; }
 .btn-cancel { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 13px; cursor: pointer; font-size: 12px; color: var(--color-text-secondary); }
 .btn-save { background: var(--color-background-info); color: var(--color-text-info); border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); padding: 6px 13px; cursor: pointer; font-size: 12px; font-weight: 500; }
@@ -305,7 +309,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Logger</h2><p>FalkEval60</p></div>
+    <div class="header-left"><h2>Match Logger</h2><p>FalkEval63</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -646,6 +650,15 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
         <span class="tog-btn danger" onclick="setTog('card-foul-type',this)">Missed Foul</span>
       </div>
       <input type="hidden" id="card-foul-type" value="" />
+    </div>
+    <div id="advantage-wrap" style="display:none">
+      <label>Advantage</label>
+      <div class="tog-group" id="tog-advantage-decision">
+        <span class="tog-btn" onclick="setTog('advantage-decision',this)">Adv Correctly Given</span>
+        <span class="tog-btn danger" onclick="setTog('advantage-decision',this)">Adv Incorrectly Given</span>
+        <span class="tog-btn danger" onclick="setTog('advantage-decision',this)">Adv Incorrectly Not Given</span>
+      </div>
+      <input type="hidden" id="advantage-decision" value="" />
     </div>
     <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
       <input type="checkbox" id="review-later-check" style="width:auto;margin:0;" />
@@ -1385,7 +1398,7 @@ function submitShootoutAttempt(){
   let shootingTeam=getCurrentShootoutTeam();
   let teamName=shootingTeam==='home'?hn:an;
   let p=currentPeriod();
-  let ev={id:Date.now(),type:'Shootout Attempt',missed:false,cmi:false,cre:false,team:shootingTeam,teamName,player:shooter,notes:'',decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:selectedShootoutResult,alsoFoul:false,reviewLater:false,officials:[],minute:0,second:0,periodName:p?p.name:'Penalty Shootout',globalSec:liveGlobalElapsed()};
+  let ev={id:Date.now(),type:'Shootout Attempt',missed:false,cmi:false,cre:false,team:shootingTeam,teamName,player:shooter,notes:'',decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:selectedShootoutResult,advantageDecision:'',alsoFoul:false,reviewLater:false,officials:[],minute:0,second:0,periodName:p?p.name:'Penalty Shootout',globalSec:liveGlobalElapsed()};
   events.unshift(ev);
   if(selectedShootoutResult==='Scored'){if(shootingTeam==='home')homePens++;else awayPens++;}
   document.getElementById('home-pens').textContent=homePens;document.getElementById('away-pens').textContent=awayPens;
@@ -1629,6 +1642,7 @@ function openEditModal(id){
   activateTogByValue('modal-card-reason',ev.cardReason||'');
   activateTogByValue('modal-to-reason',ev.toReason||'');
   activateTogByValue('card-foul-type',ev.missedFoul?'Missed Foul':(ev.alsoFoul?'Foul':''));
+  activateTogByValue('advantage-decision',ev.advantageDecision||'');
   modalCMI=!!ev.cmi; modalCRE=!!ev.cre;
   setModalOfficialsFromEvent(ev);
   syncAutomaticCMI();
@@ -1692,7 +1706,7 @@ function addPeriodSummaryForPreviousPeriod(){
   if(!p || !p.name || events.some(e=>e.type==='Period Summary' && e.periodName===p.name)) return;
   let stoppage=prompt('Stoppage time given for '+p.name+'? (example: 2 minutes or 45+2)', '');
   let ts=captureEventTimestamp();
-  events.unshift({id:Date.now()+Math.floor(Math.random()*1000),type:'Period Summary',missed:false,cmi:false,cre:false,team:'none',teamName:'',player:'',notes:formatPeriodStats(p.name,stoppage),decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:'',alsoFoul:false,reviewLater:false,officials:[],minute:ts.minute,second:ts.second,periodName:p.name,globalSec:ts.globalSec,stoppageTime:stoppage||''});
+  events.unshift({id:Date.now()+Math.floor(Math.random()*1000),type:'Period Summary',missed:false,cmi:false,cre:false,team:'none',teamName:'',player:'',notes:formatPeriodStats(p.name,stoppage),decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:'',advantageDecision:'',alsoFoul:false,reviewLater:false,officials:[],minute:ts.minute,second:ts.second,periodName:p.name,globalSec:ts.globalSec,stoppageTime:stoppage||''});
 }
 function syncMarkedMissedUI(){
   let checked=!!(document.getElementById('mark-missed-check')&&document.getElementById('mark-missed-check').checked);
@@ -1835,6 +1849,7 @@ function openModal(type,isMissed,editMode){
   if(isCard) renderCardReasonOptions(type);
   document.getElementById('to-warning-reason-wrap').style.display=(type==='Team Official Warning'||type==='Missed Team Official Warning')?'block':'none';
   document.getElementById('shootout-result-wrap').style.display=isShootoutAttempt?'block':'none';
+  let advantageWrap=document.getElementById('advantage-wrap'); if(advantageWrap) advantageWrap.style.display=(['Foul','Penalty'].includes(currentEventType)?'block':'none');
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   document.getElementById('opt-home').textContent=hn;document.getElementById('opt-away').textContent=an;
   if(currentEventType==='Referee Note' || currentEventType==='Period Summary') resetNoteTeamToggles(); else selectTeam('home');
@@ -1864,7 +1879,7 @@ function setTog(hiddenId, btn){
 
 function clearAllTogs(){
   document.querySelectorAll('#modal-bg .tog-group .tog-btn').forEach(b=>b.classList.remove('active'));
-  ['missed-card-type','missed-offside-type','modal-impact','modal-correctness','modal-difficulty','shootout-result','modal-card-reason','modal-to-reason','card-foul-type'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});
+  ['missed-card-type','missed-offside-type','modal-impact','modal-correctness','modal-difficulty','shootout-result','modal-card-reason','modal-to-reason','card-foul-type','advantage-decision'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});
 }
 
 function toggleSection(id, hdr){
@@ -2029,6 +2044,8 @@ function saveEvent(){
   let cardFoulType=(document.getElementById('card-foul-type')||{}).value||'';
   let alsoFoul=document.getElementById('also-foul-check').checked || cardFoulType==='Foul';
   let missedFoul=cardFoulType==='Missed Foul';
+  let advantageDecision=((document.getElementById('advantage-decision')||{}).value||'');
+  if(!['Foul','Penalty'].includes(currentEventType)) advantageDecision='';
   let reviewLater=document.getElementById('review-later-check').checked;
   let teamSelection=getCurrentTeamSelection();
   let officials=(currentEventType==='Substitution'||currentEventType==='Shootout Attempt')?[]:Array.from(modalSelectedOfficials);
@@ -2036,7 +2053,7 @@ function saveEvent(){
   let subSameMoment=!!(currentEventType==='Substitution' && nextSubSameMoment && activeSubMomentTimestamp);
   let ts=subSameMoment?{...activeSubMomentTimestamp}:getModalTimeFields();
   if(currentEventType==='Substitution' && subsLimited && subsRestrictWindows && !activeSubMomentTimestamp){activeSubMomentTimestamp={...ts};}
-  let ev={id:editingEventId||Date.now(),type:baseEventType(currentEventType),missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:teamSelection.team,teamName:teamSelection.teamName,player,subLeaving,subEntering,subSameMoment,notes,decision,correctness,difficulty,cardReason,toReason,impact:currentIsMissed?impact:'',missedCardType:currentIsMissed?missedCardType:'',missedOffsideType,incorrectDecision,shootoutResult,alsoFoul,missedFoul,reviewLater,officials,minute:ts.minute,second:ts.second,periodName:ts.periodName,globalSec:ts.globalSec};
+  let ev={id:editingEventId||Date.now(),type:baseEventType(currentEventType),missed:currentIsMissed,cmi:modalCMI,cre:modalCRE,team:teamSelection.team,teamName:teamSelection.teamName,player,subLeaving,subEntering,subSameMoment,notes,decision,correctness,difficulty,cardReason,toReason,impact:currentIsMissed?impact:'',missedCardType:currentIsMissed?missedCardType:'',missedOffsideType,incorrectDecision,shootoutResult,alsoFoul,missedFoul,advantageDecision,reviewLater,officials,minute:ts.minute,second:ts.second,periodName:ts.periodName,globalSec:ts.globalSec};
   pendingEventTimestamp=null;
   if(editingEventId){
     let idx=events.findIndex(e=>e.id===editingEventId);
@@ -2189,7 +2206,7 @@ function renderLog(){
     let ico=typeIcons[shownType]||typeIcons[ev.type]||'ti-circle';
     let subOverLimit=isSubEventOverLimit(ev);
     let foulCount=isRecordedFoulEvent(ev)?countTeamFoulsAtEvent(ev):'';
-    let extras=[ev.subSameMoment?'same substitution moment':null,getSubStatusForEvent(ev),foulCount?('Team foul #'+foulCount):null,ev.missedFoul?'Missed foul':null,(ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null,ev.missedOffsideType,ev.missed?ev.impact:null,ev.shootoutResult].filter(Boolean);
+    let extras=[ev.subSameMoment?'same substitution moment':null,getSubStatusForEvent(ev),foulCount?('Team foul #'+foulCount):null,ev.missedFoul?'Missed foul':null,(ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null,ev.missedOffsideType,ev.advantageDecision,ev.missed?ev.impact:null,ev.shootoutResult].filter(Boolean);
     let decParts=[ev.cardReason||ev.toReason,ev.decision].filter(Boolean);
     let details=[ev.player,...extras,...decParts,ev.notes].filter(Boolean).join(' · ');
     let itemClass='event-item'+(ev.missed?' missed-item':'')+(ev.cmi?' cmi-item':'')+(ev.cre?' cre-item':'')+(ev.reviewLater?' review-item':'');
@@ -2373,7 +2390,7 @@ function exportLogHtml(){
       teamStyle:teamTagStyle(ev)||'',
       periodName:ev.periodName||'',
       style:eventButtonStyle(ev)||'',
-      details:[ev.player, ev.missedFoul?'Missed foul':null, (ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null, ev.missedOffsideType, ev.missed?ev.impact:null, ev.shootoutResult, ev.cardReason||ev.toReason, ev.decision, ev.notes].filter(Boolean).join(' · ')
+      details:[ev.player, ev.missedFoul?'Missed foul':null, (ev.missed&&ev.missedCardType)?('Missed '+ev.missedCardType):null, ev.missedOffsideType, ev.advantageDecision, ev.missed?ev.impact:null, ev.shootoutResult, ev.cardReason||ev.toReason, ev.decision, ev.notes].filter(Boolean).join(' · ')
     }));
     let types=[...new Set(exported.flatMap(e=>{let a=[e.type]; if(e.type==='Penalty'||/Missed foul/.test(e.details)) a.push('Foul'); return a;}))].filter(Boolean).sort();
     let typeButtons=types.map(t=>'<button type="button" onclick="setType('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
