@@ -670,6 +670,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
     <p style="font-size:11px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Officials</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
       <div><label>Referee</label><input id="nm-ref" placeholder="Name" />
+      <div><label>4th Official</label><input id="nm-4th" placeholder="Name" /></div>
+      <div><label>AR1</label><input id="nm-ar1" placeholder="Name" /></div>
+      <div><label>AR2</label><input id="nm-ar2" placeholder="Name" /></div>
 <label>Referee color</label>
 <input type="hidden" id="nm-ref-color" value="#F9A825" />
 <div class="ref-color-row">
@@ -681,9 +684,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
   <button type="button" class="ref-color-btn" data-ref-color="other" style="background:#d9d9d9;" onclick="selectRefColor('other',this)">Other</button>
 </div>
 </div>
-      <div><label>4th Official</label><input id="nm-4th" placeholder="Name" /></div>
-      <div><label>AR1</label><input id="nm-ar1" placeholder="Name" /></div>
-      <div><label>AR2</label><input id="nm-ar2" placeholder="Name" /></div>
     </div>
     <label>Half length (minutes)</label>
     <input type="number" id="nm-halflength" value="45" min="1" max="120" style="margin-bottom:9px;" />
