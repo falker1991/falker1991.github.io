@@ -82,11 +82,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .team-swatch { width:18px; height:18px; border-radius:4px; border:1px solid var(--color-border-secondary); cursor:pointer; padding:0; }
 .team-swatch.selected { outline:2px solid var(--color-text-primary); outline-offset:1px; }
 .team-swatch:hover { transform:scale(1.08); }
-.ref-color-row{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:6px 0 8px;}
-.ref-color-btn{font-size:10px;padding:6px 4px;border-radius:6px;border:1px solid var(--color-border-tertiary);cursor:pointer;text-align:center;font-weight:600;}
-.ref-color-btn.active{outline:2px solid #222;outline-offset:1px;}
-
 .team-color-pair { display: grid; grid-template-columns: 1fr 44px; gap: 5px; align-items: end; }
+.color-options-wrap { position: relative; }
+.area-options-btn { border:0.5px solid var(--color-border-tertiary); border-radius:99px; padding:3px 9px; font-size:10px; cursor:pointer; background:rgba(255,255,255,0.72); color:var(--color-text-secondary); line-height:1.4; }
+body.dark .area-options-btn { background:rgba(44,44,46,0.72); }
+.area-options-btn:hover { border-color:var(--color-border-info); color:var(--color-text-info); }
+.area-options-menu { display:none; position:absolute; top:28px; right:0; min-width:168px; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:8px; z-index:90; box-shadow:0 6px 18px rgba(0,0,0,0.16); }
+.area-options-menu.open { display:block; }
+.area-options-menu-title { font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.07em; font-weight:700; margin:1px 2px 6px; }
+.area-options-menu button { width:100%; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); background:var(--color-background-secondary); color:var(--color-text-secondary); padding:6px 8px; margin-bottom:5px; font-size:12px; text-align:left; cursor:pointer; }
+.area-options-menu button:last-child { margin-bottom:0; }
+.area-options-menu button:hover { border-color:var(--color-border-info); color:var(--color-text-info); }
+.teams-wrap { position:relative; margin-bottom:1rem; }
+.teams-wrap .teams-row { margin-bottom:0; }
+.teams-options-corner { position:absolute; top:-8px; right:0; z-index:20; }
+.officials-card { position:relative; }
+.officials-card-header { justify-content:space-between; }
+.officials-card-title { display:flex; align-items:center; gap:6px; }
+
 .score-area { text-align: center; }
 .score { font-size: 30px; font-weight: 500; letter-spacing: 2px; }
 .score-label { font-size: 11px; color: var(--color-text-tertiary); }
@@ -189,6 +202,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .tog-btn:hover { border-color: var(--color-border-info); color: var(--color-text-info); }
 .tog-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
 .tog-btn.danger.active { background: #FCEBEB; color: #791F1F; border-color: #A32D2D; }
+.ref-color-toggle-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 9px; }
+.ref-color-toggle { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 9px; cursor: pointer; font-size: 11px; font-weight: 600; background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.12s; text-align: center; }
+.ref-color-toggle:hover { transform: translateY(-1px); filter: brightness(0.97); }
+.ref-color-toggle.active { outline: 2px solid var(--color-text-primary); outline-offset: 1px; }
+.ref-color-toggle.other { background: #E5E5E5; color: #444; border-color: #C7C7C7; }
+body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-color: #666; }
 /* Collapsible sections */
 .section-hdr { display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 7px; user-select: none; }
 .section-hdr .section-label { margin-bottom: 0; }
@@ -277,7 +296,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Logger</h2><p>FalkEval40</p></div>
+    <div class="header-left"><h2>Match Logger</h2><p>FalkEval42</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -309,8 +328,15 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
       <input placeholder="Match date / venue" id="match-info" style="font-size:12px;" />
       <input placeholder="Competition / league" id="competition" style="font-size:12px;" />
     </div>
-    <div class="officials-card">
-    <div class="officials-card-header"><i class="ti ti-whistle" style="font-size:15px;color:#888"></i>Match officials</div>
+    <div class="officials-card color-options-wrap">
+    <div class="officials-card-header">
+      <span class="officials-card-title"><i class="ti ti-whistle" style="font-size:15px;color:#888"></i>Match officials</span>
+      <button type="button" class="area-options-btn" onclick="toggleAreaOptions('officials-options-menu',event)">Options ▾</button>
+      <div class="area-options-menu" id="officials-options-menu">
+        <div class="area-options-menu-title">Officials color</div>
+        <button type="button" onclick="openRefereeColorOptions(event)">Change officials highlight</button>
+      </div>
+    </div>
     <div class="officials-grid">
       <div class="official-field"><span class="official-label">Referee</span><input class="official-input" id="ref-name" placeholder="Name" /></div>
       <div class="official-field"><span class="official-label">Fourth Official</span><input class="official-input" id="fourth-official" placeholder="Name" /></div>
@@ -320,16 +346,26 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
   </div><!-- end collapsible sec-matchinfo -->
   </div>
 
-  <div class="teams-row">
-    <input class="team-input" id="home-name" placeholder="Home Team" value="Home" />
-    <div class="score-area">
-      <div class="score"><span id="home-score">0</span> – <span id="away-score">0</span></div>
-      <div class="score-label">score</div>
-      <div class="shootout-row" id="shootout-display" style="display:none">
-        Pens: <span class="shootout-score" id="home-pens">0</span> – <span class="shootout-score" id="away-pens">0</span>
+  <div class="teams-wrap color-options-wrap">
+    <div class="teams-options-corner">
+      <button type="button" class="area-options-btn" onclick="toggleAreaOptions('teams-options-menu',event)">Options ▾</button>
+      <div class="area-options-menu" id="teams-options-menu">
+        <div class="area-options-menu-title">Team colors</div>
+        <button type="button" onclick="openGameTeamColor('home',event)">Change home color</button>
+        <button type="button" onclick="openGameTeamColor('away',event)">Change away color</button>
       </div>
     </div>
-    <input class="team-input" id="away-name" placeholder="Away Team" value="Away" />
+    <div class="teams-row">
+      <input class="team-input" id="home-name" placeholder="Home Team" value="Home" />
+      <div class="score-area">
+        <div class="score"><span id="home-score">0</span> – <span id="away-score">0</span></div>
+        <div class="score-label">score</div>
+        <div class="shootout-row" id="shootout-display" style="display:none">
+          Pens: <span class="shootout-score" id="home-pens">0</span> – <span class="shootout-score" id="away-pens">0</span>
+        </div>
+      </div>
+      <input class="team-input" id="away-name" placeholder="Away Team" value="Away" />
+    </div>
   </div>
 
   <div class="section-hdr" onclick="toggleSection('sec-stats',this)">
@@ -669,22 +705,21 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
     </div>
     <p style="font-size:11px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Officials</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
-      <div><label>Referee</label><input id="nm-ref" placeholder="Name" />
+      <div><label>Referee</label><input id="nm-ref" placeholder="Name" /></div>
       <div><label>4th Official</label><input id="nm-4th" placeholder="Name" /></div>
       <div><label>AR1</label><input id="nm-ar1" placeholder="Name" /></div>
       <div><label>AR2</label><input id="nm-ar2" placeholder="Name" /></div>
-<label>Referee color</label>
-<input type="hidden" id="nm-ref-color" value="#F9A825" />
-<div class="ref-color-row">
-  <button type="button" class="ref-color-btn" data-ref-color="#F9A825" style="background:#F9A825;" onclick="selectRefColor('#F9A825',this)">Yellow</button>
-  <button type="button" class="ref-color-btn" data-ref-color="#2E7D32" style="background:#2E7D32;color:#fff;" onclick="selectRefColor('#2E7D32',this)">Green</button>
-  <button type="button" class="ref-color-btn" data-ref-color="#C62828" style="background:#C62828;color:#fff;" onclick="selectRefColor('#C62828',this)">Red</button>
-  <button type="button" class="ref-color-btn" data-ref-color="#185FA5" style="background:#185FA5;color:#fff;" onclick="selectRefColor('#185FA5',this)">Blue</button>
-  <button type="button" class="ref-color-btn" data-ref-color="#000000" style="background:#000000;color:#fff;" onclick="selectRefColor('#000000',this)">Black</button>
-  <button type="button" class="ref-color-btn" data-ref-color="other" style="background:#d9d9d9;" onclick="selectRefColor('other',this)">Other</button>
-</div>
-</div>
     </div>
+    <label>Referee color</label>
+    <div class="ref-color-toggle-row" id="nm-ref-color-toggles">
+      <button type="button" class="ref-color-toggle" data-color="#F9A825" onclick="chooseRefereeColor('#F9A825')">Yellow</button>
+      <button type="button" class="ref-color-toggle" data-color="#C62828" onclick="chooseRefereeColor('#C62828')">Red</button>
+      <button type="button" class="ref-color-toggle" data-color="#185FA5" onclick="chooseRefereeColor('#185FA5')">Blue</button>
+      <button type="button" class="ref-color-toggle" data-color="#2E7D32" onclick="chooseRefereeColor('#2E7D32')">Green</button>
+      <button type="button" class="ref-color-toggle" data-color="#000000" onclick="chooseRefereeColor('#000000')">Black</button>
+      <button type="button" class="ref-color-toggle other" data-color="other" onclick="chooseRefereeColor('other')">Other</button>
+    </div>
+    <input type="hidden" id="nm-ref-color" value="#F9A825" />
     <label>Half length (minutes)</label>
     <input type="number" id="nm-halflength" value="45" min="1" max="120" style="margin-bottom:9px;" />
     <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:9px;">
@@ -830,16 +865,32 @@ function applyRefereeColor(){
     card.style.background=tintColor(refereeColor,0.12);
   }
 }
-function selectRefColor(val,btn){
-  document.querySelectorAll('.ref-color-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+function updateRefereeColorToggles(){
+  let hidden=document.getElementById('nm-ref-color');
+  let presetColors=['#F9A825','#C62828','#185FA5','#2E7D32','#000000'];
+  let selected=presetColors.includes(refereeColor)?refereeColor:'other';
+  if(hidden) hidden.value=refereeColor;
+  document.querySelectorAll('#nm-ref-color-toggles .ref-color-toggle').forEach(btn=>{
+    let color=btn.getAttribute('data-color');
+    btn.classList.toggle('active',color===selected);
+    if(color && color!=='other'){
+      btn.style.background=color;
+      btn.style.color=readableTextColor(color);
+      btn.style.borderColor=color;
+    }
+  });
+}
+function chooseRefereeColor(val){
+  if(!val) return;
   if(val==='other'){
+    updateRefereeColorToggles();
     openRefereeColorModal();
     return;
   }
   refereeColor=val;
-  let sel=document.getElementById('nm-ref-color');
-  if(sel) sel.value=val;
+  let hidden=document.getElementById('nm-ref-color');
+  if(hidden) hidden.value=val;
+  updateRefereeColorToggles();
   applyRefereeColor();
 }
 function openRefereeColorModal(){
@@ -866,9 +917,11 @@ function updateTeamColorButton(team){
 function setTeamColor(team,color){
   if(team==='referee'){
     refereeColor=color;
-    let sel=document.getElementById('nm-ref-color');
-    if(sel) sel.value=color; document.querySelectorAll('.ref-color-btn').forEach(b=>b.classList.toggle('active', b.dataset.refColor==='other'));
+    let hidden=document.getElementById('nm-ref-color');
+    if(hidden) hidden.value=color;
+    updateRefereeColorToggles();
     applyRefereeColor();
+    saveState();
     return;
   }
   let input=document.getElementById('nm-'+team+'-color');
@@ -876,6 +929,7 @@ function setTeamColor(team,color){
   if(team==='home') homeTeamColor=color; else awayTeamColor=color;
   updateTeamColorButton(team);
   applyTeamColors();
+  saveState();
 }
 function openTeamColorModal(team){
   activeColorTeam=team||'home';
@@ -889,6 +943,32 @@ function closeTeamColorModal(){
   let bg=document.getElementById('team-color-modal-bg');
   if(bg) bg.classList.remove('open');
 }
+function closeAreaOptions(){
+  document.querySelectorAll('.area-options-menu.open').forEach(menu=>menu.classList.remove('open'));
+}
+function toggleAreaOptions(menuId,e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  let menu=document.getElementById(menuId);
+  if(!menu) return;
+  let willOpen=!menu.classList.contains('open');
+  closeAreaOptions();
+  if(willOpen) menu.classList.add('open');
+}
+function openGameTeamColor(team,e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  closeAreaOptions();
+  openTeamColorModal(team);
+}
+function openRefereeColorOptions(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  closeAreaOptions();
+  openRefereeColorModal();
+}
+document.addEventListener('click',function(e){
+  if(e.target.closest && e.target.closest('.color-options-wrap')) return;
+  closeAreaOptions();
+});
+
 function renderTeamColorModalPalette(){
   let palette=document.getElementById('team-color-modal-palette');
   if(!palette) return;
@@ -1138,19 +1218,13 @@ function startNextPeriod(){
   currentPeriodIdx=periods.length-1;
   periodElapsedBase=0;
   globalElapsedBase=liveGlobalElapsed(); // preserve global elapsed across periods
-  if(type==='shootout'){
-    clockStartWall=null;
-    clockRunning=false;
-    clearInterval(clockInterval);clockInterval=null;
-    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';
-    document.getElementById('clock-btn').classList.remove('active');
-  } else {
-    clockStartWall=Date.now();
-    clockRunning=true;
-    document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-pause"></i>';
-    document.getElementById('clock-btn').classList.add('active');
-    startClockInterval();
-  }
+  // Starting a new period prepares the clock but does not automatically start it.
+  // The user must press Play to begin timing the period.
+  clockStartWall=null;
+  clockRunning=false;
+  clearInterval(clockInterval);clockInterval=null;
+  document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';
+  document.getElementById('clock-btn').classList.remove('active');
   // A new period/half starts a fresh substitution-limit scope when limits are per half.
   if(subsLimitScope==='half'){
     nextSubSameMoment=false;
@@ -1894,14 +1968,7 @@ function openNewMatchModal(){
   document.getElementById('nm-halflength').value='45';
   let varBox=document.getElementById('nm-var-enabled'); if(varBox) varBox.checked=false;
   let subsBox=document.getElementById('nm-subs-limited'); if(subsBox) subsBox.checked=false;
-  let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');if(hc)hc.value=homeTeamColor;if(ac)ac.value=awayTeamColor;renderTeamPalettes();let rs=document.getElementById('nm-ref-color');
-document.querySelectorAll('.ref-color-btn').forEach(b=>{
- const v=b.dataset.refColor;
- const active=(v==='other')?!['#F9A825','#2E7D32','#C62828','#185FA5','#000000'].includes(refereeColor):(v===refereeColor);
- b.classList.toggle('active',active);
-});
-if(rs){rs.value=refereeColor;}
-applyTeamColors();applyRefereeColor();document.getElementById('new-match-modal-bg').classList.add('open');
+  let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');if(hc)hc.value=homeTeamColor;if(ac)ac.value=awayTeamColor;renderTeamPalettes();updateRefereeColorToggles();applyTeamColors();applyRefereeColor();document.getElementById('new-match-modal-bg').classList.add('open');
 }
 function closeNewMatchModal(){document.getElementById('new-match-modal-bg').classList.remove('open');}
 
@@ -1919,8 +1986,8 @@ function startNewMatch(){
   homeTeamColor=(document.getElementById('nm-home-color')&&document.getElementById('nm-home-color').value)||homeTeamColor||'#185FA5';
   awayTeamColor=(document.getElementById('nm-away-color')&&document.getElementById('nm-away-color').value)||awayTeamColor||'#BA7517';
   let ref=document.getElementById('nm-ref').value.trim();
-  let refColorSelect=document.getElementById('nm-ref-color');
-  if(refColorSelect && refColorSelect.value) refereeColor=refColorSelect.value;
+  let refColorInput=document.getElementById('nm-ref-color');
+  if(refColorInput && refColorInput.value) refereeColor=refColorInput.value;
   let fourth=document.getElementById('nm-4th').value.trim();
   let ar1=document.getElementById('nm-ar1').value.trim();
   let ar2=document.getElementById('nm-ar2').value.trim();
@@ -1963,6 +2030,9 @@ function startNewMatch(){
   renderLog();
   updateTypeFilterChips();
   updateEventSectionVisibility();
+  applyTeamColors();
+  applyRefereeColor();
+  updateRefereeColorToggles();
   // If substitutions are limited, collect rule details before starting the first period.
   if(subsLimited){
     setTimeout(openSubsLimitModal, 120);
