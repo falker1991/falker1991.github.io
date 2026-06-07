@@ -1812,17 +1812,26 @@ function periodStats(periodName){
   const hn=document.getElementById('home-name')?.value||'Home', an=document.getElementById('away-name')?.value||'Away';
   function forTeam(team){
     const evs=events.filter(e=>(e.periodName||'')===(periodName||'') && e.team===team);
-    return {goals:evs.filter(e=>!e.missed && baseEventType(e.type)==='Goal').length,
+    return {
+      goals:evs.filter(e=>!e.missed && baseEventType(e.type)==='Goal').length,
       fouls:evs.filter(isRecordedFoulEvent).length,
-      cards:evs.filter(e=>!e.missed && ['Yellow Card','Red Card'].includes(baseEventType(e.type))).length,
-      missed:evs.filter(e=>e.missed).length};
+      yellows:evs.filter(e=>!e.missed && baseEventType(e.type)==='Yellow Card').length,
+      reds:evs.filter(e=>!e.missed && baseEventType(e.type)==='Red Card').length,
+      offsides:evs.filter(e=>baseEventType(e.type)==='Offside').length
+    };
   }
   return {homeName:hn,awayName:an,home:forTeam('home'),away:forTeam('away')};
 }
 function formatPeriodStats(periodName,stoppage){
   let s=periodStats(periodName);
-  const fmt=(name,x)=>name+': Goals '+x.goals+', Fouls '+x.fouls+', Cards '+x.cards+', Missed '+x.missed;
-  return 'Period stats — '+(periodName||'Period')+': '+fmt(s.homeName,s.home)+' | '+fmt(s.awayName,s.away)+' | Stoppage time given: '+(stoppage||'not recorded');
+  const fmt=(name,x)=>name+': Goals '+x.goals+', Fouls '+x.fouls+', Yellow Cards '+x.yellows+', Red Cards '+x.reds+', Offsides '+x.offsides;
+  return (periodName||'Period')+' Stats:
+'+
+    fmt(s.homeName,s.home)+'
+'+
+    fmt(s.awayName,s.away)+'
+'+
+    'Stoppage time given: '+(stoppage||'not recorded');
 }
 function addPeriodSummaryForPreviousPeriod(){
   const p=periods[currentPeriodIdx];
