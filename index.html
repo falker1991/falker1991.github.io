@@ -42,11 +42,11 @@ body.dark {
 .dark-toggle { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 9px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
 .dark-toggle:hover { background: var(--color-background-secondary); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); }
+body { font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); min-height:100vh; overflow-y:auto; }
 input, select, textarea, button { font-family: inherit; }
 input, select, textarea { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 10px; background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
 input:focus, select:focus, textarea:focus { border-color: var(--color-border-info); }
-.app { max-width: 700px; margin: 0 auto; padding: 1rem; }
+.app { max-width: 700px; margin: 0 auto; padding: 1rem; padding-bottom: 120px; }
 .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 80; background: var(--color-background-primary); padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
 .header-left h2 { font-size: 18px; font-weight: 500; }
 .header-left p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
@@ -3045,3 +3045,15 @@ if(loadState()){
 </script>
 </body>
 </html>
+
+<style>
+#event-log{
+  overflow: visible !important;
+}
+.log-section{
+  overflow: visible !important;
+}
+.log-btns-below{
+  margin-bottom: 60px !important;
+}
+</style>
