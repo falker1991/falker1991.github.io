@@ -302,6 +302,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .event-action-col { display: flex; flex-direction: column; gap: 3px; }
 .event-action-col:empty { display: none; }
 .event-edit-delete-col { align-items: center; }
+.event-edit-delete-col .duplicate-note-btn { margin-top: 3px; }
 .action-flag-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 5px; font-size: 9px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-tertiary); line-height: 1.3; white-space: nowrap; }
 .action-flag-btn.active-cmi { background: #FFF3CD; color: #7A5800; border-color: #C49A00; }
 .action-flag-btn.active-cre { background: #F3E8FF; color: #5B1FA5; border-color: #8B3FC8; }
@@ -1760,12 +1761,13 @@ function displayEventType(ev){
 function typeMatchesFilter(ev,type){
   const base=displayEventType(ev);
   if(type===base || type===ev.type) return true;
-  if(type==='Foul' && (base==='Penalty' || ev.missedFoul || (ev.alsoFoul && ['Yellow Card','Red Card'].includes(base)))) return true;
+  if(type==='Foul' && (isRecordedFoulEvent(ev) || ev.missedFoul)) return true;
   return false;
 }
 function isRecordedFoulEvent(e){
   const base=baseEventType(e.type);
-  return !e.missed && (base==='Foul'||base==='Penalty'||(e.alsoFoul&&['Yellow Card','Red Card'].includes(base)));
+  // Missed yellow/red cards marked as an actual foul should count exactly like a regular foul.
+  return (base==='Foul' && !e.missed) || (base==='Penalty' && !e.missed) || (e.alsoFoul && ['Yellow Card','Red Card'].includes(base));
 }
 function periodStats(periodName){
   const hn=document.getElementById('home-name')?.value||'Home', an=document.getElementById('away-name')?.value||'Away';
@@ -2164,7 +2166,12 @@ function saveEvent(){
   editingEventId=null;
   // Penalty counts as a foul only when it was actually called. Missed calls count only as missed.
   if(currentEventType==='Penalty' && !ev.missed) ev.alsoFoul=true;
-  if(ev.missed){ev.alsoFoul=false;if(currentEventType==='Penalty') ev.cmi=true;}
+  if(ev.missed){
+    // Keep alsoFoul when a missed card is marked as an actual foul, so it counts and filters like a regular foul.
+    let missedCardWithActualFoul = ev.alsoFoul && ['Yellow Card','Red Card'].includes(baseEventType(ev.type));
+    if(!missedCardWithActualFoul) ev.alsoFoul=false;
+    if(currentEventType==='Penalty') ev.cmi=true;
+  }
   if(ev.missedFoul) ev.alsoFoul=false;
 
   recalculateScoreboards();
@@ -2308,7 +2315,7 @@ function getCurrentFilterLabel(){
 }
 
 function updateTypeFilterChips(){
-  let usedTypes=[...new Set(events.flatMap(e=>{let arr=[displayEventType(e)]; if(displayEventType(e)==='Penalty'||e.missedFoul) arr.push('Foul'); return arr;}))].filter(Boolean).sort();
+  let usedTypes=[...new Set(events.flatMap(e=>{let arr=[displayEventType(e)]; if(isRecordedFoulEvent(e)||e.missedFoul) arr.push('Foul'); return arr;}))].filter(Boolean).sort();
   let row=document.getElementById('type-filter-row');row.innerHTML='';
   // Show/hide official filter row based on whether any event has officials
   let anyOfficials=events.some(e=>e.officials&&e.officials.length>0);
@@ -2368,10 +2375,10 @@ function renderLog(){
     let officialTags=ev.officials.map(o=>'<span class="tag-official">'+officialDisplayLabel(o)+'</span>').join('');
     let evTimeStr=eventTimeStr(ev);
     let noEvalActions=['Substitution','Shootout Attempt'].includes(ev.type);
-    let duplicateBtn=(ev.type==='Referee Note')?'<button class="duplicate-note-btn" onclick="duplicateNote('+ev.id+')">Duplicate</button>':'';
-    let actionBtns=noEvalActions?duplicateBtn:(duplicateBtn+'<button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?officialButtonDisplayList(ev.officials):'Offs')+'</button>');
-    let editDeleteBtns='<button class="edit-btn" onclick="openEditModal('+ev.id+')" title="Edit event"><i class="ti ti-pencil"></i></button><button class="del-btn" onclick="deleteEvent('+ev.id+')" title="Delete event"><i class="ti ti-x"></i></button>';
-    return '<div class="'+itemClass+'" style="'+eventButtonStyle(ev)+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+shownType+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags">'+(ev.teamName?'<span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>':'')+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+(ev.type==='Penalty'?'<span class="tag-missed">+ Foul</span>':'')+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
+    let duplicateBtn=(ev.type==='Referee Note')?'<button class="duplicate-note-btn" onclick="duplicateNote('+ev.id+')">+</button>':'';
+    let actionBtns=noEvalActions?'':('<button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?officialButtonDisplayList(ev.officials):'Offs')+'</button>');
+    let editDeleteBtns='<button class="edit-btn" onclick="openEditModal('+ev.id+')" title="Edit event"><i class="ti ti-pencil"></i></button><button class="del-btn" onclick="deleteEvent('+ev.id+')" title="Delete event"><i class="ti ti-x"></i></button>'+duplicateBtn;
+    return '<div class="'+itemClass+'" style="'+eventButtonStyle(ev)+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+shownType+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags">'+(ev.teamName?'<span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>':'')+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+((isRecordedFoulEvent(ev)&&!['Foul','Penalty'].includes(baseEventType(ev.type)))?'<span class="tag-missed">+ Foul</span>':(ev.type==='Penalty'?'<span class="tag-missed">+ Foul</span>':''))+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
   }).join('');
 }
 
