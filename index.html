@@ -313,6 +313,19 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 }
 .tag-incorrect { background: #FCEBEB; color: #791F1F; border: 0.5px solid #A32D2D; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
 .tag-over-limit { background:#FCEBEB; color:#791F1F; border:0.5px solid #A32D2D; font-weight:700; font-size:9px; padding:1px 5px; border-radius:4px; }
+.tag-foul-bubble {
+  display: inline-block;
+  border: 0.5px solid #185FA5;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 9px;
+  font-weight: 600;
+  background: #E6F1FB;
+  color: #0C447C;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
 .half-tag { font-size: 10px; color: var(--color-text-tertiary); }
 .event-actions { display: grid; grid-template-columns: auto auto; gap: 3px 4px; align-items: start; flex-shrink: 0; }
 .event-action-col { display: flex; flex-direction: column; gap: 3px; }
@@ -2404,7 +2417,7 @@ function renderLog(){
     let duplicateBtn=(ev.type==='Referee Note')?'<button class="duplicate-note-btn" onclick="duplicateNote('+ev.id+')">+</button>':'';
     let actionBtns=noEvalActions?'':('<button class="action-flag-btn '+(ev.cmi?'active-cmi':'')+'" onclick="toggleEventFlag('+ev.id+',\'cmi\')">'+(ev.cmi?'✓ CMI':'CMI')+'</button><button class="action-flag-btn '+(ev.cre?'active-cre':'')+'" onclick="toggleEventFlag('+ev.id+',\'cre\')">'+(ev.cre?'✓ CRE':'CRE')+'</button><button class="action-officials-btn '+(ev.officials.length?'has-officials':'')+'" onclick="openOfficialsPopover('+ev.id+',this)">'+(ev.officials.length?officialButtonDisplayList(ev.officials):'Offs')+'</button>');
     let editDeleteBtns='<button class="edit-btn" onclick="openEditModal('+ev.id+')" title="Edit event"><i class="ti ti-pencil"></i></button><button class="del-btn" onclick="deleteEvent('+ev.id+')" title="Delete event"><i class="ti ti-x"></i></button>'+duplicateBtn;
-    return '<div class="'+itemClass+'" style="'+eventButtonStyle(ev)+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+shownType+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags">'+(ev.teamName?'<span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>':'')+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+((isRecordedFoulEvent(ev)&&!['Foul','Penalty'].includes(baseEventType(ev.type)))?'<span class="tag-missed">+ Foul</span>':(ev.type==='Penalty'?'<span class="tag-missed">+ Foul</span>':''))+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
+    return '<div class="'+itemClass+'" style="'+eventButtonStyle(ev)+'"><span class="event-min">'+evTimeStr+'</span><div class="event-body"><div class="event-type-row">'+(ev.missed?'<span style="font-size:9px;font-weight:700;color:#A32D2D;background:#FCEBEB;border-radius:3px;padding:1px 4px;border:0.5px solid #A32D2D">MISSED</span>':'')+'<i class="ti '+ico+'" style="font-size:12px;vertical-align:-1px"></i> '+shownType+'</div>'+(details?'<div class="event-detail">'+details+'</div>':'')+'<div class="event-tags">'+(ev.teamName?'<span class="event-team-tag '+teamTagClass(ev)+'" style="'+teamTagStyle(ev)+'">'+ev.teamName+'</span>':'')+(ev.periodName?'<span class="half-tag">'+ev.periodName+'</span>':'')+(ev.cmi?'<span class="tag-cmi">CMI</span>':'')+(ev.cre?'<span class="tag-cre">CRE</span>':'')+((isRecordedFoulEvent(ev)&&!['Foul','Penalty'].includes(baseEventType(ev.type)))?'<span class="tag-foul-bubble">+ Foul</span>':(ev.type==='Penalty'?'<span class="tag-foul-bubble">+ Foul</span>':''))+(ev.missedFoul?'<span class="tag-missed">+ Missed Foul</span>':'')+(ev.incorrectDecision?'<span class="tag-incorrect">Incorrect decision</span>':'')+(subOverLimit?'<span class="tag-over-limit">SUB LIMIT EXCEEDED</span>':'')+officialTags+'</div></div><div class="event-actions"><div class="event-action-col">'+actionBtns+'</div><div class="event-action-col event-edit-delete-col">'+editDeleteBtns+'</div></div></div>';
   }).join('');
 }
 
