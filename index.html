@@ -261,7 +261,11 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .official-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; align-items: center; }
 .official-filter-label { font-size: 10px; color: var(--color-text-tertiary); margin-right: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 .off-chip { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
-.off-chip.active { background: #E6F1FB; color: #185FA5; border-color: #185FA5; }
+.off-chip.active {
+  background: var(--official-highlight-bg, #E6F1FB);
+  color: var(--official-highlight-color, #185FA5);
+  border-color: var(--official-highlight-border, #185FA5);
+}
 .off-chip.all-chip.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 400; }
 .log-empty { text-align: center; padding: 1.5rem; font-size: 13px; color: var(--color-text-tertiary); border: 0.5px dashed var(--color-border-tertiary); border-radius: var(--border-radius-md); }
 .event-item { display: flex; align-items: flex-start; gap: 7px; padding: 8px 9px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); margin-bottom: 5px; }
@@ -282,7 +286,15 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .tag-missed { background: #FCEBEB; color: #791F1F; }
 .tag-cmi { background: #FFF3CD; color: #7A5800; border: 0.5px solid #C49A00; font-weight: 600; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
 .tag-cre { background: #F3E8FF; color: #5B1FA5; border: 0.5px solid #8B3FC8; font-weight: 600; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
-.tag-official { background: #E6F1FB; color: #185FA5; border: 0.5px solid #185FA5; font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 99px; }
+.tag-official {
+  background: var(--official-highlight-bg, #E6F1FB);
+  color: var(--official-highlight-color, #185FA5);
+  border: 0.5px solid var(--official-highlight-border, #185FA5);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 99px;
+}
 .tag-incorrect { background: #FCEBEB; color: #791F1F; border: 0.5px solid #A32D2D; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
 .tag-over-limit { background:#FCEBEB; color:#791F1F; border:0.5px solid #A32D2D; font-weight:700; font-size:9px; padding:1px 5px; border-radius:4px; }
 .half-tag { font-size: 10px; color: var(--color-text-tertiary); }
@@ -294,7 +306,12 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .action-flag-btn.active-cmi { background: #FFF3CD; color: #7A5800; border-color: #C49A00; }
 .action-flag-btn.active-cre { background: #F3E8FF; color: #5B1FA5; border-color: #8B3FC8; }
 .action-officials-btn { border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-tertiary); line-height: 1.3; white-space: nowrap; }
-.action-officials-btn.has-officials { background: #E6F1FB; color: #185FA5; border-color: #185FA5; }
+.action-officials-btn.has-officials {
+  background: var(--official-highlight-bg, #E6F1FB);
+  color: var(--official-highlight-color, #185FA5);
+  border-color: var(--official-highlight-border, #185FA5);
+  font-weight: 600;
+}
 .del-btn { background: transparent; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 12px; padding: 1px; }
 .del-btn:hover { color: #A32D2D; }
 .edit-btn { background: transparent; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 12px; padding: 1px; }
@@ -310,7 +327,11 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .officials-popover h4 { font-size: 12px; font-weight: 500; margin-bottom: 7px; }
 .popover-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .popover-chip { border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 3px 10px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--color-background-secondary); color: var(--color-text-secondary); }
-.popover-chip.selected { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+.popover-chip.selected {
+  background: var(--official-highlight-bg, #E6F1FB);
+  border-color: var(--official-highlight-border, #185FA5);
+  color: var(--official-highlight-color, #185FA5);
+}
 .popover-done { width: 100%; padding: 5px; font-size: 11px; border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); background: var(--color-background-info); color: var(--color-text-info); cursor: pointer; font-weight: 500; }
 </style>
 </head>
@@ -921,6 +942,14 @@ function styleTeamElement(el,team,selected){if(!el)return;let color=getTeamColor
 function applyTeamColors(){let hn=document.getElementById('home-name'),an=document.getElementById('away-name');if(hn){hn.style.borderColor=homeTeamColor;hn.style.background=tintColor(homeTeamColor,0.12);}if(an){an.style.borderColor=awayTeamColor;an.style.background=tintColor(awayTeamColor,0.12);}let nh=document.getElementById('nm-home'),na=document.getElementById('nm-away');if(nh){nh.style.borderColor=homeTeamColor;nh.style.background=tintColor(homeTeamColor,0.10);}if(na){na.style.borderColor=awayTeamColor;na.style.background=tintColor(awayTeamColor,0.10);}['home','away'].forEach(t=>{let opt=document.getElementById('opt-'+t);if(opt)styleTeamElement(opt,t,opt.classList.contains('selected'));});}
 function setTeamColorsFromNewMatch(){let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');homeTeamColor=(hc&&hc.value)||homeTeamColor||'#185FA5';awayTeamColor=(ac&&ac.value)||awayTeamColor||'#BA7517';refreshColorDependentDisplays();if(typeof renderTeamPalette==='function'){renderTeamPalette('home');renderTeamPalette('away');}}
 function applyRefereeColor(){
+  let root=document.documentElement;
+  let bg=tintColor(refereeColor,0.18);
+  let fg=readableTextColor(refereeColor);
+  if(root){
+    root.style.setProperty('--official-highlight-bg', bg);
+    root.style.setProperty('--official-highlight-color', fg);
+    root.style.setProperty('--official-highlight-border', refereeColor);
+  }
   let card=document.querySelector('.officials-card');
   if(card){
     card.style.border='0.5px solid '+refereeColor;
@@ -1117,11 +1146,11 @@ function sortedEventsCopy(list){
 }
 
 function stoppageClockStr(totalSecs, periodLengthMins){
-  // Show MM+SS:ss once the period's regulation time is exceeded
+  // Use cumulative match time for stoppage display (90+2, 80+2, etc.)
   if(!periodLengthMins || periodLengthMins<=0) return clockStr(totalSecs);
   let regulated = periodLengthMins * 60;
   if(totalSecs <= regulated) return clockStr(totalSecs);
-  let baseMins = periodLengthMins;
+  let baseMins = Math.floor(regulated/60);
   let extra = totalSecs - regulated;
   return baseMins + '+' + pad(Math.floor(extra/60)) + ':' + pad(extra%60);
 }
@@ -1135,7 +1164,8 @@ function eventTimeStr(ev){
     let periodSecs=totalSecs-p.startOffset; // secs into that period
     if(periodSecs>p.length*60){
       let extra=periodSecs-p.length*60;
-      return p.length+'+'+pad(Math.floor(extra/60))+':'+pad(extra%60);
+      let regulationMinute = Math.floor((p.startOffset + (p.length*60))/60);
+      return regulationMinute+'+'+pad(Math.floor(extra/60))+':'+pad(extra%60);
     }
   }
   return pad(ev.minute)+':'+pad(ev.second||0);
