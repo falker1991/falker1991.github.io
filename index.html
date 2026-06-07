@@ -550,7 +550,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 
   <div class="log-section">
     <div class="section-hdr" onclick="toggleSection('sec-event-log',this)"><p class="section-label" style="margin:0">Event log</p><span class="collapse-icon">▾</span></div>
-    <div class="collapsible" id="sec-event-log" style="max-height:1200px;">
+    <div class="collapsible" id="sec-event-log" style="max-height:none; overflow:visible;">
     <div class="log-controls">
       <div class="log-filters">
         <div class="tab-bar">
@@ -3055,5 +3055,22 @@ if(loadState()){
 }
 .log-btns-below{
   margin-bottom: 60px !important;
+}
+</style>
+
+<style>
+#sec-event-log:not(.collapsed){
+  max-height: none !important;
+  overflow: visible !important;
+}
+#sec-event-log.collapsed{
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+#event-log,
+.log-section,
+.log-controls,
+.log-filters{
+  overflow: visible !important;
 }
 </style>
