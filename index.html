@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Event Logger</title>
+<title>Match Notes</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -58,6 +58,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-border-inf
 .clock-btn:hover { background: var(--color-background-secondary); }
 .clock-btn.active { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
 .period-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+.period-tools-row { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:1rem; }
+.period-tools-row .period-row { flex:1; margin-bottom:0; }
+.global-collapse-controls { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+.global-collapse-btn { background:transparent; border:0.5px solid var(--color-border-secondary); border-radius:99px; padding:4px 10px; font-size:11px; cursor:pointer; color:var(--color-text-secondary); white-space:nowrap; }
+.global-collapse-btn:hover { background:var(--color-background-secondary); color:var(--color-text-info); border-color:var(--color-border-info); }
+@media (max-width:520px){ .period-tools-row { flex-direction:column; align-items:stretch; } .global-collapse-controls { justify-content:flex-start; } }
 .period-pill { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); white-space: nowrap; }
 .period-pill.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
 .period-pill.done { opacity: 0.45; text-decoration: line-through; }
@@ -266,7 +272,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 .event-min { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); min-width: 42px; font-variant-numeric: tabular-nums; font-family: monospace, monospace; }
 .event-body { flex: 1; min-width: 0; }
 .event-type-row { font-size: 12px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
-.event-detail { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; word-break: break-word; }
+.event-detail { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; word-break: break-word; white-space: pre-wrap; }
 .event-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; align-items: center; }
 .event-team-tag { font-size: 10px; padding: 1px 6px; border-radius: var(--border-radius-md); }
 .tag-home { background: #E6F1FB; color: #185FA5; }
@@ -311,7 +317,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Logger</h2><p>FalkEval66</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval68</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -326,7 +332,13 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
     </div>
   </div>
 
-  <div class="period-row" id="period-row"></div>
+  <div class="period-tools-row">
+    <div class="period-row" id="period-row"></div>
+    <div class="global-collapse-controls" aria-label="Section controls">
+      <button type="button" class="global-collapse-btn" onclick="expandAllSections()">Expand All</button>
+      <button type="button" class="global-collapse-btn" onclick="collapseAllSections()">Collapse All</button>
+    </div>
+  </div>
   <div class="end-match-bar" id="end-match-bar">
     <span class="match-ended-label">⏹ Match ended</span>
     <div class="end-match-bar-btns">
@@ -1930,6 +1942,24 @@ function toggleSection(id, hdr){
   else{el.classList.add('collapsed');hdr.classList.add('collapsed');}
 }
 
+function setAllSectionsCollapsed(shouldCollapse){
+  document.querySelectorAll('.collapsible').forEach(el=>{
+    el.classList.toggle('collapsed', shouldCollapse);
+    let hdr = el.previousElementSibling;
+    if(hdr && hdr.classList && hdr.classList.contains('section-hdr')){
+      hdr.classList.toggle('collapsed', shouldCollapse);
+    }
+  });
+}
+
+function expandAllSections(){
+  setAllSectionsCollapsed(false);
+}
+
+function collapseAllSections(){
+  setAllSectionsCollapsed(true);
+}
+
 function endMatch(){
   if(clockRunning)toggleClock();
   document.getElementById('end-match-bar').classList.add('visible');
@@ -2525,10 +2555,10 @@ function exportLogHtml(onlyCurrentFilter){
       'function setTab(t,b){tab=t;activate(b);draw();}function setType(t,b){typ=t;activate(b);draw();}function setTag(t,b){tag=t;activate(b);draw();}function setPeriod(t,b){period=t;activate(b);draw();}'+
       'function download(name,content,type){var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},200);}'+
       'function exportSelectedTxt(){var rows=selected();var lines=rows.map(function(e){return e.time+" ["+e.shown+"] "+(e.teamName||"")+(e.details?" - "+e.details:"")+(e.tags&&e.tags.length?" {"+e.tags.join(", ")+"}":"");});download("selected-events.txt",lines.join("\\n")||"No selected events","text/plain;charset=utf-8");}'+
-      'function exportSelectedHtml(){var rows=selected();var doc="<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Selected Events</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}.row{border:1px solid #ddd;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;color:#555}.title{font-weight:600}.detail{font-size:12px;color:#555}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}</style></head><body><h2>Selected Match Events</h2>"+rows.map(rowHtml).join("")+"</body></html>";download("selected-events.html",doc,"text/html;charset=utf-8");}'+
+      'function exportSelectedHtml(){var rows=selected();var doc="<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Selected Events</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}.row{border:1px solid #ddd;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;color:#555}.title{font-weight:600}.detail{font-size:12px;color:#555;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}</style></head><body><h2>Selected Match Events</h2>"+rows.map(rowHtml).join("")+"</body></html>";download("selected-events.html",doc,"text/html;charset=utf-8");}'+
       'draw();';
     let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title><style>'+ 
-      'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
+      'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
       '</style></head><body>'+ 
       '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+(match?'<p class="meta">'+escapeHtml(match)+'</p>':'')+(comp?'<p class="meta">'+escapeHtml(comp)+'</p>':'')+'<p class="meta">'+escapeHtml(hn)+' '+homeScore+' – '+awayScore+' '+escapeHtml(an)+'</p>'+ 
       '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Missed</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
