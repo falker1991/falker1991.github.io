@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v101</title>
+<title>Match Notes v103</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -614,7 +614,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval101</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval103</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -1656,7 +1656,7 @@ function selectPeriodType(el){
   refreshPeriodSetupFields();
 }
 
-function startNextPeriod(){
+async function startNextPeriod(){
   if(clockRunning){
     periodElapsedBase=livePeriodElapsed();
     globalElapsedBase=liveGlobalElapsed();
@@ -1676,13 +1676,13 @@ function startNextPeriod(){
   let lastPeriod=periods[periods.length-1];
   let lastEnd=lastPeriod?(lastPeriod.startOffset+(lastPeriod.length||0)*60):0;
   if(type==='half'){
-    if(halfCount>=2){alert('Only two halves can be selected. Choose Extra Time, Shootout, or Custom.');return;}
+    if(halfCount>=2){showAlertModal('Only two halves can be selected. Choose Extra Time, Shootout, or Custom.');return;}
     name=halfCount===0?'1st Half':'2nd Half';
     // 2nd half clock starts at the 1st half's length
     if(halfCount===0){startOffset=0;}
     else{let fh=periods.find(p=>p.type==='half');startOffset=fh?fh.length*60:lastEnd;}
   } else if(type==='et'){
-    if(etCount>=2){alert('Only two extra time periods can be selected.');return;}
+    if(etCount>=2){showAlertModal('Only two extra time periods can be selected.');return;}
     name=etCount===0?'ET – 1st Half':'ET – 2nd Half';
     startOffset=lastEnd;
   } else if(type==='shootout'){
@@ -1696,7 +1696,7 @@ function startNextPeriod(){
     name=customName||('Period '+(periods.length+1));
     startOffset=lastEnd;
   }
-  if(currentPeriodIdx>=0){addPeriodSummaryForPreviousPeriod();periods[currentPeriodIdx].done=true;}
+  if(currentPeriodIdx>=0){await addPeriodSummaryForPreviousPeriod();periods[currentPeriodIdx].done=true;}
   periods.push({name,type,length,countsUp,startOffset,done:false});
   currentPeriodIdx=periods.length-1;
   periodElapsedBase=0;
@@ -1798,9 +1798,9 @@ function checkShootoutClinch(){
   }
 }
 function submitShootoutAttempt(){
-  if(!isShootout()){alert('Start the Penalty Shootout period first.');return;}
+  if(!isShootout()){showAlertModal('Start the Penalty Shootout period first.');return;}
   let shooter=(document.getElementById('shootout-shooter')||{}).value?.trim()||'';
-  if(!selectedShootoutResult){alert('Select Scored, Missed, or Saved.');return;}
+  if(!selectedShootoutResult){showAlertModal('Select Scored, Missed, or Saved.');return;}
   let hn=document.getElementById('home-name').value||'Home', an=document.getElementById('away-name').value||'Away';
   let shootingTeam=getCurrentShootoutTeam();
   let teamName=shootingTeam==='home'?hn:an;
@@ -2207,10 +2207,11 @@ function formatPeriodStats(periodName,stoppage){
     fmt(s.awayName,s.away)+'\n'+
     'Stoppage time given: '+(stoppage||'not recorded');
 }
-function addPeriodSummaryForPreviousPeriod(){
+async function addPeriodSummaryForPreviousPeriod(){
   const p=periods[currentPeriodIdx];
   if(!p || !p.name || events.some(e=>e.type==='Period Summary' && e.periodName===p.name)) return;
-  let stoppage=prompt('Stoppage time given for '+p.name+'? (example: 2 minutes or 45+2)', '');
+  let stoppage=await showPromptModal('Stoppage time given for '+p.name+'? (example: 2 minutes or 45+2)', '');
+  if(stoppage===null) stoppage='';
   let ts=captureEventTimestamp();
   events.unshift({id:Date.now()+Math.floor(Math.random()*1000),type:'Period Summary',missed:false,cmi:false,cre:false,team:'none',teamName:'',player:'',notes:formatPeriodStats(p.name,stoppage),decision:'',correctness:'',difficulty:'',cardReason:'',toReason:'',impact:'',missedCardType:'',missedOffsideType:'',incorrectDecision:false,shootoutResult:'',advantageDecision:'',alsoFoul:false,reviewLater:false,officials:[],minute:ts.minute,second:ts.second,periodName:p.name,globalSec:ts.globalSec,stoppageTime:stoppage||''});
 }
@@ -2308,7 +2309,7 @@ function openModal(type,isMissed,editMode){
   editMode=!!editMode;
   if(!editMode) editingEventId=null;
   if(type==='VAR Review' && !varEnabled && !editMode){
-    alert('VAR is not enabled for this match. Start a new match and check “VAR in use” to log VAR reviews.');
+    showAlertModal('VAR is not enabled for this match. Start a new match and check “VAR in use” to log VAR reviews.');
     return;
   }
   currentEventType=baseEventType(type);currentIsMissed=!!isMissed;
@@ -2539,7 +2540,7 @@ function showSecondYellowPrompt(ev, count){
   let label=(teamName+' '+(ev.player||'')).trim();
   if(msg) msg.textContent=label+' now has '+count+' yellow cards. Mark this player as Sent Off with a Red Card for 2CT?';
   if(bg) bg.classList.add('open');
-  else if(confirm('This is the second yellow card for '+label+'. Mark this player as Sent Off with a Red Card for 2CT?')) openSecondYellowSendOffModal(ev);
+  else showConfirmModal('This is the second yellow card for '+label+'. Mark this player as Sent Off with a Red Card for 2CT?').then(ok=>{if(ok) openSecondYellowSendOffModal(ev);});
 }
 
 function maybePromptSecondYellowSendOff(ev, wasEditing){
@@ -3051,7 +3052,7 @@ function exportLog(){
     showExportFallback('TXT Export', txt, 'text/plain;charset=utf-8', getExportFilename('txt'));
   }catch(err){
     console.error('TXT export error:',err);
-    alert('Could not export TXT log: '+(err&&err.message?err.message:err));
+    showAlertModal('Could not export TXT log: '+(err&&err.message?err.message:err));
   }
 }
 
@@ -3064,7 +3065,7 @@ function exportFilteredLog(){
     showExportFallback('Filtered TXT Export', txt, 'text/plain;charset=utf-8', filename);
   }catch(err){
     console.error('Filtered TXT export error:',err);
-    alert('Could not export filtered TXT log: '+(err&&err.message?err.message:err));
+    showAlertModal('Could not export filtered TXT log: '+(err&&err.message?err.message:err));
   }
 }
 
@@ -3130,7 +3131,7 @@ function exportLogHtml(onlyCurrentFilter){
     showExportFallback(onlyCurrentFilter?'Filtered HTML Export':'HTML Export', html, 'text/html;charset=utf-8', htmlFilename);
   }catch(err){
     console.error('HTML export error:',err);
-    alert('Could not export HTML log: '+(err&&err.message?err.message:err));
+    showAlertModal('Could not export HTML log: '+(err&&err.message?err.message:err));
   }
 }
 
@@ -3144,10 +3145,10 @@ function importLogFile(input){
   let file=input.files&&input.files[0];
   if(!file) return;
   let reader=new FileReader();
-  reader.onload=function(){
+  reader.onload=async function(){
     try{
       let imported=parseImportedLog(String(reader.result||''), file.name||'');
-      if(!imported.length){ alert('No importable events were found in that file.'); return; }
+      if(!imported.length){ await showAlertModal('No importable events were found in that file.'); return; }
       recordUndoSnapshot();
       imported.forEach(ev=>events.unshift(ev));
       sortEventsByGameTime();
@@ -3159,10 +3160,10 @@ function importLogFile(input){
       updateTypeFilterChips();
       updatePeriodFilterChips();
       saveState();
-      alert('Imported '+imported.length+' event'+(imported.length===1?'':'s')+'.');
+      await showAlertModal('Imported '+imported.length+' event'+(imported.length===1?'':'s')+'.');
     }catch(err){
       console.error('Import failed',err);
-      alert('Could not import log: '+(err&&err.message?err.message:err));
+      await showAlertModal('Could not import log: '+(err&&err.message?err.message:err));
     }
   };
   reader.readAsText(file);
@@ -3724,8 +3725,8 @@ function loadState(){
   }catch(e){console.warn('loadState failed',e); return false;}
 }
 
-function clearState(){
-  if(!confirm('Clear all match data and start a new match?')) return;
+async function clearState(){
+  if(!(await showConfirmModal('Clear all match data and start a new match?'))) return;
   localStorage.removeItem(LS_KEY);
   location.reload();
 }
@@ -3886,9 +3887,9 @@ function buildSettingsModal(){
   document.getElementById('settings-team-official-colors').innerHTML=Object.keys(v73Settings.teamOfficialColors).map(name=>colorButtonHtml('team',name,v73Settings.teamOfficialColors[name])).join('');
 }
 
-function resetSettingsToDefaults(){
-  if(!confirm('Restore all settings to their default values?')) return;
-  localStorage.removeItem('FalkEval101_settings');
+async function resetSettingsToDefaults(){
+  if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
+  localStorage.removeItem('FalkEval103_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4113,6 +4114,59 @@ function openEventTypeChangeModal(){
   }
 }
 
+
+// ── v103 app modal replacements for browser prompts ─────────────────────────
+let _appMessageResolver=null;
+let _appMessageMode='alert';
+function setupAppMessageModal({title,message,mode,defaultValue}){
+  _appMessageMode=mode||'alert';
+  document.getElementById('app-message-modal-title').textContent=title||(_appMessageMode==='confirm'?'Confirm Action':(_appMessageMode==='prompt'?'Input Needed':'Notice'));
+  document.getElementById('app-message-modal-message').textContent=message||'';
+  let input=document.getElementById('app-message-modal-input');
+  input.style.display=_appMessageMode==='prompt'?'block':'none';
+  input.value=defaultValue||'';
+  let cancel=document.getElementById('app-message-cancel-btn');
+  let ok=document.getElementById('app-message-ok-btn');
+  cancel.style.display=_appMessageMode==='alert'?'none':'inline-block';
+  ok.textContent=_appMessageMode==='confirm'?'Confirm':(_appMessageMode==='prompt'?'Submit':'OK');
+  let bg=document.getElementById('app-message-modal-bg');
+  bg.style.display='flex';
+  bg.classList.add('open');
+  if(_appMessageMode==='prompt') setTimeout(()=>input.focus(),50);
+}
+function showAlertModal(message,title){
+  return new Promise(resolve=>{
+    _appMessageResolver=resolve;
+    setupAppMessageModal({title:title||'Notice',message:String(message||''),mode:'alert'});
+  });
+}
+function showConfirmModal(message,title){
+  return new Promise(resolve=>{
+    _appMessageResolver=resolve;
+    setupAppMessageModal({title:title||'Confirm Action',message:String(message||''),mode:'confirm'});
+  });
+}
+function showPromptModal(message,defaultValue,title){
+  return new Promise(resolve=>{
+    _appMessageResolver=resolve;
+    setupAppMessageModal({title:title||'Input Needed',message:String(message||''),mode:'prompt',defaultValue:defaultValue||''});
+  });
+}
+function resolveAppMessageModal(result){
+  let bg=document.getElementById('app-message-modal-bg');
+  let input=document.getElementById('app-message-modal-input');
+  if(bg){bg.classList.remove('open');bg.style.display='none';}
+  if(_appMessageResolver){
+    let r=_appMessageResolver;
+    _appMessageResolver=null;
+    if(_appMessageMode==='prompt') r(result?input.value:null);
+    else r(!!result);
+  }
+}
+window.alert=function(message){ showAlertModal(message); };
+window.confirm=function(message){ showConfirmModal(message); return false; };
+window.prompt=function(message,defaultValue){ showPromptModal(message,defaultValue); return null; };
+
 </script>
 
 
@@ -4193,6 +4247,19 @@ function openEventTypeChangeModal(){
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeUpdateClockModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-bg" id="app-message-modal-bg" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <h3 id="app-message-modal-title">Notice</h3>
+    <div id="app-message-modal-message" style="margin:12px 0;font-size:13px;color:var(--color-text-secondary);white-space:pre-wrap;"></div>
+    <input id="app-message-modal-input" style="display:none;width:100%;margin-bottom:10px;" />
+    <div class="modal-btns">
+      <button class="btn-cancel" id="app-message-cancel-btn" onclick="resolveAppMessageModal(false)">Cancel</button>
+      <button class="btn-save" id="app-message-ok-btn" onclick="resolveAppMessageModal(true)">OK</button>
     </div>
   </div>
 </div>
