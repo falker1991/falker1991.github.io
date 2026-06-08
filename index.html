@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v90</title>
+<title>Match Notes v101</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -614,7 +614,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval90</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval101</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -756,7 +756,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
         <input id="shootout-shooter" placeholder="Shooter name or #" />
         <div class="shootout-result-row">
           <button class="shootout-result-btn" onclick="setShootoutResult('Scored')" type="button">Scored</button>
-          <button class="shootout-result-btn" onclick="setShootoutResult('Missed')" type="button">Missed</button>
+          <button class="shootout-result-btn" onclick="setShootoutResult('Incorrect')" type="button">Incorrect</button>
           <button class="shootout-result-btn" onclick="setShootoutResult('Saved')" type="button">Saved</button>
         </div>
         <button class="shootout-submit" onclick="submitShootoutAttempt()" type="button">Submit attempt</button>
@@ -812,7 +812,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       <div class="log-filters">
         <div class="tab-bar">
           <button class="tab-btn active" id="tab-all" onclick="setTab('all')">All <span class="tab-count" id="count-all">0</span></button>
-          <button class="tab-btn" id="tab-missed" onclick="setTab('missed')">Missed <span class="tab-count" id="count-missed">0</span></button>
+          <button class="tab-btn" id="tab-missed" onclick="setTab('missed')">Incorrect <span class="tab-count" id="count-missed">0</span></button>
           <button class="tab-btn" id="tab-cmi" onclick="setTab('cmi')">CMI <span class="tab-count" id="count-cmi">0</span></button>
           <button class="tab-btn" id="tab-cre" onclick="setTab('cre')">CRE <span class="tab-count" id="count-cre">0</span></button>
           <button class="tab-btn" id="tab-review" onclick="setTab('review')">Review <span class="tab-count" id="count-review">0</span></button>
@@ -841,6 +841,8 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       <button class="export-btn" onclick="exportFilteredLog()" title="Export current filtered events as TXT">Export Filtered TXT</button>
       <button class="export-btn" onclick="exportLogHtml(false)" title="Export all events as HTML">Export Log (HTML)</button>
       <button class="export-btn" onclick="exportFilteredLogHtml()" title="Export current filtered events as HTML">Export Filtered HTML</button>
+      <button class="export-btn" onclick="openImportLogFile()">Import Log</button>
+      <input type="file" id="import-log-file" accept=".txt,.html,.htm,text/plain,text/html" style="display:none" onchange="importLogFile(this)" />
       <button class="export-btn" onclick="copyForEval()">Evaluate ↗</button>
     </div>
     </div>
@@ -950,7 +952,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
       <label>Penalty kick result</label>
       <div class="tog-group" id="tog-shootout-result">
         <span class="tog-btn" onclick="setTog('shootout-result',this)">Scored</span>
-        <span class="tog-btn danger" onclick="setTog('shootout-result',this)">Missed</span>
+        <span class="tog-btn danger" onclick="setTog('shootout-result',this)">Incorrect</span>
         <span class="tog-btn" onclick="setTog('shootout-result',this)">Saved</span>
       </div>
       <input type="hidden" id="shootout-result" value="" />
@@ -1251,7 +1253,7 @@ function tintColor(hex,alpha){let c=hexToRgb(hex);return 'rgba('+c.r+','+c.g+','
 function getTeamColor(team){if(team==='home')return homeTeamColor||'#185FA5';if(team==='away')return awayTeamColor||'#BA7517';return '';}
 function styleTeamElement(el,team,selected){if(!el)return;let color=getTeamColor(team);if(!color)return;el.style.borderColor=color;el.style.background=selected?color:tintColor(color,0.16);el.style.color=selected?readableTextColor(color):color;el.style.fontWeight=selected?'600':'500';}
 function applyTeamColors(){let hn=document.getElementById('home-name'),an=document.getElementById('away-name');if(hn){hn.style.borderColor=homeTeamColor;hn.style.background=tintColor(homeTeamColor,0.12);}if(an){an.style.borderColor=awayTeamColor;an.style.background=tintColor(awayTeamColor,0.12);}let nh=document.getElementById('nm-home'),na=document.getElementById('nm-away');if(nh){nh.style.borderColor=homeTeamColor;nh.style.background=tintColor(homeTeamColor,0.10);}if(na){na.style.borderColor=awayTeamColor;na.style.background=tintColor(awayTeamColor,0.10);}['home','away'].forEach(t=>{let opt=document.getElementById('opt-'+t);if(opt)styleTeamElement(opt,t,opt.classList.contains('selected'));});}
-function setTeamColorsFromNewMatch(){let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');homeTeamColor=(hc&&hc.value)||homeTeamColor||'#185FA5';awayTeamColor=(ac&&ac.value)||awayTeamColor||'#BA7517';refreshColorDependentDisplays();if(typeof renderTeamPalette==='function'){renderTeamPalette('home');renderTeamPalette('away');}}
+function setTeamColorsFromNewMatch(){let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');homeTeamColor=(hc&&hc.value)||homeTeamColor||'#185FA5';awayTeamColor=(ac&&ac.value)||awayTeamColor||'#BA7517';syncSettingsTeamOfficialColorsFromMain();refreshColorDependentDisplays();if(typeof renderTeamPalette==='function'){renderTeamPalette('home');renderTeamPalette('away');}}
 function applyRefereeColor(){
   let root=document.documentElement;
   let bg=tintColor(refereeColor,0.18);
@@ -1290,10 +1292,13 @@ function chooseRefereeColor(val){
     return;
   }
   refereeColor=val;
+  if(v73Settings?.teamOfficialColors) v73Settings.teamOfficialColors.Officials=val;
   let hidden=document.getElementById('nm-ref-color');
   if(hidden) hidden.value=val;
   updateRefereeColorToggles();
-  applyRefereeColor();
+  syncSettingsTeamOfficialColorsFromMain();
+  refreshColorDependentDisplays();
+  saveState();
 }
 function openRefereeColorModal(){
   activeColorTeam='referee';
@@ -1321,6 +1326,7 @@ function refreshColorDependentDisplays(){
   // Re-render after a color change so existing logged event tags update immediately.
   applyTeamColors();
   applyRefereeColor();
+  if(typeof applyV73Settings==='function') applyV73Settings();
   if(typeof updateStats==='function') updateStats();
   if(typeof renderLog==='function') renderLog();
   if(typeof updateTypeFilterChips==='function') updateTypeFilterChips();
@@ -1332,14 +1338,22 @@ function setTeamColor(team,color){
     let hidden=document.getElementById('nm-ref-color');
     if(hidden) hidden.value=color;
     updateRefereeColorToggles();
+    syncSettingsTeamOfficialColorsFromMain();
     refreshColorDependentDisplays();
     saveState();
     return;
   }
   let input=document.getElementById('nm-'+team+'-color');
   if(input) input.value=color;
-  if(team==='home') homeTeamColor=color; else awayTeamColor=color;
+  if(team==='home'){
+    homeTeamColor=color;
+    if(v73Settings?.teamOfficialColors) v73Settings.teamOfficialColors.Home=color;
+  } else {
+    awayTeamColor=color;
+    if(v73Settings?.teamOfficialColors) v73Settings.teamOfficialColors.Away=color;
+  }
   updateTeamColorButton(team);
+  syncSettingsTeamOfficialColorsFromMain();
   refreshColorDependentDisplays();
   saveState();
 }
@@ -2312,6 +2326,7 @@ function openModal(type,isMissed,editMode){
   document.getElementById('incorrect-decision-check').checked=false;
   document.getElementById('also-foul-check').checked=false;
   document.getElementById('review-later-check').checked=false;
+  syncReviewVisibility();
   setEventMarker('');
   let isSub=type==='Substitution';
   let isShootoutAttempt=type==='Shootout Attempt';
@@ -2573,7 +2588,7 @@ function saveEvent(){
   let missedFoul=cardFoulType==='Missed Foul';
   let advantageDecision=((document.getElementById('advantage-decision')||{}).value||'');
   if(!['Foul','Penalty'].includes(currentEventType)) advantageDecision='';
-  let reviewLater=document.getElementById('review-later-check').checked;
+  let reviewLater=v73Settings.reviewEnabled && document.getElementById('review-later-check').checked;
   let eventMarker=(document.getElementById('event-marker-value')||{}).value||'';
   let teamSelection=getCurrentTeamSelection();
   let officials=(currentEventType==='Substitution'||currentEventType==='Shootout Attempt')?[]:Array.from(modalSelectedOfficials);
@@ -2733,7 +2748,7 @@ function updatePeriodFilterChips(){
 function getFilteredEventsForCurrentView(){
   sortEventsByGameTime();
   let filtered=events.slice();
-  if(activeTab==='missed')filtered=filtered.filter(e=>e.missed);
+  if(activeTab==='missed')filtered=filtered.filter(e=>e.incorrectDecision);
   else if(activeTab==='cmi')filtered=filtered.filter(e=>e.cmi);
   else if(activeTab==='cre')filtered=filtered.filter(e=>e.cre);
   else if(activeTab==='review')filtered=filtered.filter(e=>e.reviewLater);
@@ -2839,7 +2854,7 @@ function renderLog(){
   updateMarkerFilterChips();
   updateVisibleEventCount(filtered.length);
   if(!filtered.length){
-    const msgs={all:'No events logged yet',missed:'No missed calls logged',cmi:'No CMI events flagged',cre:'No CRE events flagged'};
+    const msgs={all:'No events logged yet',missed:'No incorrect decisions logged',cmi:'No CMI events flagged',cre:'No CRE events flagged'};
     el.innerHTML='<div class="log-empty">'+(msgs[activeTab]||'No events match filter')+'</div>';return;
   }
   el.innerHTML=filtered.map(ev=>{
@@ -3071,7 +3086,7 @@ function exportLogHtml(onlyCurrentFilter){
       cmi:!!ev.cmi,
       cre:!!ev.cre,
       review:!!ev.reviewLater,
-      tags:[ev.missed?'Missed':null,ev.cmi?'CMI':null,ev.cre?'CRE':null,ev.reviewLater?'Review':null,ev.incorrectDecision?'Incorrect':null,ev.missedFoul?'Missed Foul':null].filter(Boolean),
+      tags:[ev.missed?'Incorrect':null,ev.cmi?'CMI':null,ev.cre?'CRE':null,ev.reviewLater?'Review':null,ev.incorrectDecision?'Incorrect':null,ev.missedFoul?'Missed Foul':null].filter(Boolean),
       officials:(ev.officials||[]).map(officialDisplayLabel),
       teamName:ev.teamName||'',
       teamStyle:teamTagStyle(ev)||'',
@@ -3103,7 +3118,7 @@ function exportLogHtml(onlyCurrentFilter){
       'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
       '</style></head><body>'+ 
       '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+(match?'<p class="meta">'+escapeHtml(match)+'</p>':'')+(comp?'<p class="meta">'+escapeHtml(comp)+'</p>':'')+'<p class="meta">'+escapeHtml(hn)+' '+homeScore+' – '+awayScore+' '+escapeHtml(an)+'</p>'+ 
-      '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Missed</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
+      '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Incorrect</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
       '<div class="filters"><strong>Period:</strong> <button type="button" class="active" onclick="setPeriod(\'all\',this)">All periods</button>'+periodButtons+'</div>'+
       '<div class="filters"><strong>Type:</strong> <button type="button" class="active" onclick="setType(\'all\',this)">All types</button>'+typeButtons+'</div>'+
       '<div class="filters"><strong>Tag:</strong> <button type="button" class="active" onclick="setTag(\'all\',this)">All tags</button>'+tagButtons+'</div>'+
@@ -3116,6 +3131,246 @@ function exportLogHtml(onlyCurrentFilter){
   }catch(err){
     console.error('HTML export error:',err);
     alert('Could not export HTML log: '+(err&&err.message?err.message:err));
+  }
+}
+
+
+function openImportLogFile(){
+  let input=document.getElementById('import-log-file');
+  if(input){ input.value=''; input.click(); }
+}
+
+function importLogFile(input){
+  let file=input.files&&input.files[0];
+  if(!file) return;
+  let reader=new FileReader();
+  reader.onload=function(){
+    try{
+      let imported=parseImportedLog(String(reader.result||''), file.name||'');
+      if(!imported.length){ alert('No importable events were found in that file.'); return; }
+      recordUndoSnapshot();
+      imported.forEach(ev=>events.unshift(ev));
+      sortEventsByGameTime();
+      recalculateScoreboards();
+      normalizeCMICREFlags();
+      normalizeIncorrectDecisionFlags();
+      updateStats();
+      renderLog();
+      updateTypeFilterChips();
+      updatePeriodFilterChips();
+      saveState();
+      alert('Imported '+imported.length+' event'+(imported.length===1?'':'s')+'.');
+    }catch(err){
+      console.error('Import failed',err);
+      alert('Could not import log: '+(err&&err.message?err.message:err));
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseImportedLog(raw, filename){
+  let htmlEvents=parseImportedHtmlEvents(raw);
+  if(htmlEvents.length) return htmlEvents;
+  return parseImportedTxtEvents(raw);
+}
+
+function parseImportedHtmlEvents(raw){
+  let match=raw.match(/var\s+data\s*=\s*(\[[\s\S]*?\]);var\s+tab=/);
+  if(!match) return [];
+  let arr=JSON.parse(match[1]);
+  return arr.map(importedExportObjectToEvent).filter(Boolean);
+}
+
+function importedExportObjectToEvent(obj){
+  let ts=parseImportedTime(obj.time||'');
+  let type=baseEventType(obj.type||obj.shown||'Referee Note');
+  let periodName=obj.periodName||ts.periodName||currentPeriod()?.name||'Imported';
+  ensureImportedPeriod(periodName);
+  let team=parseImportedTeam(obj.teamName||'');
+  let details=String(obj.details||'');
+  let ev={
+    id:Date.now()+Math.floor(Math.random()*1000000),
+    type:type,
+    missed:!!obj.missed || (obj.tags||[]).includes('Incorrect'),
+    cmi:!!obj.cmi || (obj.tags||[]).includes('CMI'),
+    cre:!!obj.cre || (obj.tags||[]).includes('CRE'),
+    incorrectDecision:!!(obj.tags||[]).includes('Incorrect'),
+    reviewLater:!!obj.review || (obj.tags||[]).includes('Review'),
+    team:team.team,
+    teamName:obj.teamName||team.teamName,
+    player:'',
+    subLeaving:'',
+    subEntering:'',
+    notes:'',
+    decision:'',
+    correctness:'',
+    difficulty:'',
+    cardReason:'',
+    toReason:'',
+    impact:'',
+    missedCardType:'',
+    missedOffsideType:'',
+    incorrectDecision:!!(obj.tags||[]).includes('Incorrect'),
+    shootoutResult:'',
+    alsoFoul:false,
+    missedFoul:(obj.tags||[]).includes('Missed Foul') || /Missed foul/i.test(details),
+    advantageDecision:'',
+    officials:parseImportedOfficials((obj.officials||[]).join('+')),
+    minute:ts.minute,
+    second:ts.second,
+    periodName:periodName,
+    globalSec:ts.minute*60+ts.second,
+    imported:true
+  };
+  parseImportedDetailsIntoEvent(ev, details);
+  if(ev.missed) ev.incorrectDecision=true;
+  if(/^Incorrect/i.test(String(ev.decision||ev.correctness||''))) ev.incorrectDecision=true;
+  return ev;
+}
+
+function parseImportedTxtEvents(raw){
+  let selectedSection=extractImportSection(raw,'SELECTED EVENTS');
+  let periodSummarySection=extractImportSection(raw,'PERIOD SUMMARY NOTES');
+  let lines=[...selectedSection.split(/\r?\n/),...periodSummarySection.split(/\r?\n/)].map(s=>s.trim()).filter(s=>s && s!=='None');
+  let seen=new Set();
+  let out=[];
+  lines.forEach(line=>{
+    let ev=parseImportedTxtLine(line);
+    if(!ev) return;
+    let key=[ev.minute,ev.second,ev.periodName,ev.type,ev.teamName,ev.player,ev.notes,ev.decision].join('|');
+    if(seen.has(key)) return;
+    seen.add(key);
+    out.push(ev);
+  });
+  return out;
+}
+
+function extractImportSection(raw, title){
+  let re=new RegExp(title+':\\s*\\n([\\s\\S]*?)(?:\\n\\n[A-Z][A-Z /-]+:|$)');
+  let m=raw.match(re);
+  return m?m[1]:'';
+}
+
+function parseImportedTxtLine(line){
+  let m=line.match(/^(\d{1,3}):(\d{2})\s+(?:\(([^)]+)\)\s+)?(?:\[([^\]]+)\]\s+)?\s*\[([^\]]+)\]\s*(.*)$/);
+  if(!m) return null;
+  let minute=parseInt(m[1],10)||0, second=parseInt(m[2],10)||0;
+  let periodName=m[3]||currentPeriod()?.name||'Imported';
+  ensureImportedPeriod(periodName);
+  let flags=(m[4]||'').split(',').map(s=>s.trim()).filter(Boolean);
+  let type=baseEventType(m[5]||'Referee Note');
+  let rest=m[6]||'';
+  let bracketOfficial='';
+  let offMatch=rest.match(/\s+\[([A-Za-z0-9+ ]+)\]/);
+  if(offMatch && /Ref|AR1|AR2|4th|CR/.test(offMatch[1])){
+    bracketOfficial=offMatch[1];
+    rest=rest.replace(offMatch[0],'');
+  }
+  let brace='';
+  let braceMatch=rest.match(/\{([^}]*)\}/);
+  if(braceMatch){
+    brace=braceMatch[1];
+    rest=rest.replace(braceMatch[0],'');
+  }
+  let decision='';
+  let decMatches=[...rest.matchAll(/\[([^\]]+)\]/g)];
+  if(decMatches.length){
+    decision=decMatches[decMatches.length-1][1];
+    rest=rest.replace(decMatches[decMatches.length-1][0],'');
+  }
+  let teamAndMore=rest.trim();
+  let teamName='', player='', notes='';
+  if(teamAndMore.includes(' - ')){
+    let parts=teamAndMore.split(' - ');
+    teamName=parts.shift().trim();
+    player=(parts.shift()||'').trim();
+    notes=parts.join(' - ').trim();
+  }else{
+    teamName=teamAndMore.trim();
+  }
+  let team=parseImportedTeam(teamName);
+  let ev={
+    id:Date.now()+Math.floor(Math.random()*1000000),
+    type:type,
+    missed:flags.includes('MISSED'),
+    cmi:flags.includes('CMI'),
+    cre:flags.includes('CRE'),
+    incorrectDecision:flags.includes('INCORRECT-DECISION') || flags.includes('INCORRECT') || flags.includes('Incorrect'),
+    reviewLater:flags.includes('REVIEW'),
+    team:team.team,
+    teamName:teamName || team.teamName,
+    player:player,
+    subLeaving:'',
+    subEntering:'',
+    notes:notes,
+    decision:decision,
+    correctness:decision.split(' — ')[0]||'',
+    difficulty:decision.includes(' — ')?decision.split(' — ').slice(1).join(' — '):'',
+    cardReason:'',
+    toReason:'',
+    impact:'',
+    missedCardType:'',
+    missedOffsideType:'',
+    shootoutResult:'',
+    alsoFoul:false,
+    missedFoul:false,
+    advantageDecision:'',
+    officials:parseImportedOfficials(bracketOfficial),
+    minute:minute,
+    second:second,
+    periodName:periodName,
+    globalSec:minute*60+second,
+    imported:true
+  };
+  parseImportedDetailsIntoEvent(ev, brace);
+  if(ev.missed || /^Incorrect/i.test(String(ev.decision||ev.correctness||''))) ev.incorrectDecision=true;
+  return ev;
+}
+
+function parseImportedDetailsIntoEvent(ev, details){
+  String(details||'').split(/\s*,\s*|\s+·\s+/).map(s=>s.trim()).filter(Boolean).forEach(part=>{
+    if(/^Missed Yellow Card$/i.test(part)) ev.missedCardType='Yellow Card';
+    else if(/^Missed Red Card$/i.test(part)) ev.missedCardType='Red Card';
+    else if(/^Missed foul$/i.test(part)) ev.missedFoul=true;
+    else if(/^Stoppage\s+/i.test(part)) ev.stoppageTime=part.replace(/^Stoppage\s+/i,'');
+    else if(['No impact','Minor','Significant','Decisive'].includes(part)) ev.impact=part;
+    else if(['Scored','Incorrect','Saved'].includes(part)) ev.shootoutResult=part;
+    else if(/^Correct|^Incorrect|^Inconclusive/i.test(part)) ev.missedOffsideType=part;
+    else if(/^Advantage/i.test(part)) ev.advantageDecision=part;
+    else if(!ev.cardReason && (YELLOW_CARD_REASONS.includes(part)||RED_CARD_REASONS.includes(part))) ev.cardReason=part;
+  });
+}
+
+function parseImportedTime(value){
+  let m=String(value||'').match(/(\d{1,3}):(\d{2})/);
+  return {minute:m?(parseInt(m[1],10)||0):0, second:m?(parseInt(m[2],10)||0):0, periodName:''};
+}
+
+function parseImportedTeam(name){
+  let hn=document.getElementById('home-name')?.value||'Home';
+  let an=document.getElementById('away-name')?.value||'Away';
+  let n=String(name||'').trim();
+  if(!n) return {team:'none',teamName:''};
+  if(n===hn) return {team:'home',teamName:n};
+  if(n===an) return {team:'away',teamName:n};
+  if(n.includes(hn)&&n.includes(an)) return {team:'both',teamName:n};
+  return {team:'none',teamName:n};
+}
+
+function parseImportedOfficials(value){
+  let txt=String(value||'');
+  let ids=[];
+  if(/Referee|Ref|CR/.test(txt)) ids.push('CR');
+  if(/AR1/.test(txt)) ids.push('AR1');
+  if(/AR2/.test(txt)) ids.push('AR2');
+  if(/4th|Fourth/.test(txt)) ids.push('4th');
+  return [...new Set(ids)];
+}
+
+function ensureImportedPeriod(name){
+  if(!name) return;
+  if(!periods.some(p=>p.name===name)){
+    periods.push({name:name,length:45,type:'half',done:true,startOffset:0});
   }
 }
 
@@ -3486,6 +3741,7 @@ const EVENT_COLOR_CLASSES={
 const DEFAULT_V73_SETTINGS={
   impactEnabled:true,
   difficultyEnabled:true,
+  reviewEnabled:true,
   enabledEvents:Object.fromEntries(Object.keys(EVENT_COLOR_CLASSES).map(k=>[k,true])),
   eventColors:{
     'Goal':'#EAF3DE','Foul':'#E6F1FB','Penalty':'#FBEAF0','Offside':'#F1EFE8','Referee Note':'#F1EFE8',
@@ -3509,6 +3765,23 @@ function loadV73Settings(){
   }catch(e){return JSON.parse(JSON.stringify(DEFAULT_V73_SETTINGS));}
 }
 function saveV73Settings(){localStorage.setItem(V73_SETTINGS_KEY,JSON.stringify(v73Settings));}
+
+function colorWithAlpha(hex, alpha){
+  let c=String(hex||'').trim();
+  if(/^rgba?\(/i.test(c)) return c;
+  if(c.startsWith('#')){
+    let h=c.slice(1);
+    if(h.length===3) h=h.split('').map(x=>x+x).join('');
+    if(h.length===6){
+      let r=parseInt(h.slice(0,2),16);
+      let g=parseInt(h.slice(2,4),16);
+      let b=parseInt(h.slice(4,6),16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+  }
+  return c;
+}
+
 function bestTextColor(bg){
   let c=(bg||'#ffffff').replace('#',''); if(c.length===3)c=c.split('').map(x=>x+x).join('');
   let r=parseInt(c.slice(0,2),16)||255,g=parseInt(c.slice(2,4),16)||255,b=parseInt(c.slice(4,6),16)||255;
@@ -3521,15 +3794,22 @@ function applyV73Settings(){
     css+=`.evt-btn.${cls}{background:${bg}!important;border-color:${bestTextColor(bg)}55!important}.evt-btn.${cls} .ico,.evt-btn.${cls} .lbl{color:${bestTextColor(bg)}!important}`;
   });
   const tc=v73Settings.tagColors;
-  css+=`.tag-home{background:${tc.Home}!important;color:${bestTextColor(tc.Home)}!important}`;
-  css+=`.tag-away{background:${tc.Away}!important;color:${bestTextColor(tc.Away)}!important}`;
-  css+=`.tag-both{background:${tc.Both}!important;color:${bestTextColor(tc.Both)}!important}`;
+  const teamOfficial=v73Settings.teamOfficialColors||{};
+  teamOfficial.Home=homeTeamColor||teamOfficial.Home||tc.Home;
+  teamOfficial.Away=awayTeamColor||teamOfficial.Away||tc.Away;
+  teamOfficial.Officials=refereeColor||teamOfficial.Officials||tc.Official;
+  const homeTag=teamOfficial.Home;
+  const awayTag=teamOfficial.Away;
+  const officialTag=teamOfficial.Officials;
+  css+=`.tag-home{background:${colorWithAlpha(homeTag,0.55)}!important;color:${bestTextColor(homeTag)}!important}`;
+  css+=`.tag-away{background:${colorWithAlpha(awayTag,0.55)}!important;color:${bestTextColor(awayTag)}!important}`;
+  css+=`.tag-both{background:linear-gradient(90deg,${colorWithAlpha(homeTag,0.55)} 0%,${colorWithAlpha(homeTag,0.55)} 50%,${colorWithAlpha(awayTag,0.55)} 50%,${colorWithAlpha(awayTag,0.55)} 100%)!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
   css+=`.tag-none{background:${tc.None}!important;color:${bestTextColor(tc.None)}!important}`;
   css+=`.tag-missed{background:${tc.Missed}!important;color:${bestTextColor(tc.Missed)}!important}`;
   css+=`.tag-cmi{background:${tc.CMI}!important;color:${bestTextColor(tc.CMI)}!important;border-color:${bestTextColor(tc.CMI)}55!important}`;
   css+=`.tag-cre{background:${tc.CRE}!important;color:${bestTextColor(tc.CRE)}!important;border-color:${bestTextColor(tc.CRE)}55!important}`;
   css+=`.tag-incorrect{background:${tc.Incorrect}!important;color:${bestTextColor(tc.Incorrect)}!important}`;
-  css+=`.tag-official{background:${tc.Official}!important;color:${bestTextColor(tc.Official)}!important;border-color:${bestTextColor(tc.Official)}55!important}`;
+  css+=`.tag-official{background:${colorWithAlpha(officialTag,0.55)}!important;color:${bestTextColor(officialTag)}!important;border-color:${bestTextColor(officialTag)}55!important}`;
   let st=document.getElementById('v73-dynamic-styles');
   if(!st){st=document.createElement('style');st.id='v73-dynamic-styles';document.head.appendChild(st);}
   st.textContent=css;
@@ -3585,6 +3865,7 @@ function colorButtonHtml(kind,name,value){
   return `<button type="button" class="settings-color-btn" data-color-kind="${kind}" data-color-name="${name}" data-color-value="${color}" onclick="openSettingsPalette('${kind}','${name}')" style="background:${color};color:${textColor};border-color:${textColor}55"><span class="swatch-dot" style="color:${color}"></span><span>${name}</span></button>`;
 }
 function openSettingsModal(){
+  syncSettingsTeamOfficialColorsFromMain();
   buildSettingsModal();
   collapseAllSettingsSections();
   document.getElementById('settings-modal-bg').classList.add('open');
@@ -3593,6 +3874,7 @@ function closeSettingsModal(){document.getElementById('settings-modal-bg').class
 function buildSettingsModal(){
   setSettingsToggleButton('setting-impact-enabled',!!v73Settings.impactEnabled);
   setSettingsToggleButton('setting-difficulty-enabled',!!v73Settings.difficultyEnabled);
+  setSettingsToggleButton('setting-review-enabled',!!v73Settings.reviewEnabled);
   document.getElementById('settings-events-list').innerHTML=Object.keys(EVENT_COLOR_CLASSES).map(name=>{
     let cls=EVENT_COLOR_CLASSES[name]||'';
     let enabled=v73Settings.enabledEvents[name]!==false;
@@ -3600,24 +3882,51 @@ function buildSettingsModal(){
     return `<button type="button" class="evt-btn ${cls} settings-event-btn ${enabled?'':'disabled'}" data-v73-event="${name}" onclick="this.classList.toggle('disabled')"><span class="ico"><i class="ti ${icon}"></i></span><span class="lbl">${name}</span></button>`;
   }).join('');
   document.getElementById('settings-event-colors').innerHTML=Object.keys(EVENT_COLOR_CLASSES).map(name=>colorButtonHtml('event',name,v73Settings.eventColors[name]||'#eeeeee')).join('');
-  document.getElementById('settings-tag-colors').innerHTML=Object.keys(v73Settings.tagColors).map(name=>colorButtonHtml('tag',name,v73Settings.tagColors[name])).join('');
+  document.getElementById('settings-tag-colors').innerHTML=Object.keys(v73Settings.tagColors).filter(name=>!['Home','Away','Official'].includes(name)).map(name=>colorButtonHtml('tag',name,v73Settings.tagColors[name])).join('');
   document.getElementById('settings-team-official-colors').innerHTML=Object.keys(v73Settings.teamOfficialColors).map(name=>colorButtonHtml('team',name,v73Settings.teamOfficialColors[name])).join('');
+}
+
+function resetSettingsToDefaults(){
+  if(!confirm('Restore all settings to their default values?')) return;
+  localStorage.removeItem('FalkEval101_settings');
+  location.reload();
 }
 function saveSettingsModal(){
   v73Settings.impactEnabled=getSettingsToggleButton('setting-impact-enabled');
   v73Settings.difficultyEnabled=getSettingsToggleButton('setting-difficulty-enabled');
+  v73Settings.reviewEnabled=getSettingsToggleButton('setting-review-enabled');
   document.querySelectorAll('[data-v73-event]').forEach(el=>v73Settings.enabledEvents[el.dataset.v73Event]=!el.classList.contains('disabled'));
   document.querySelectorAll('[data-color-kind="event"]').forEach(el=>v73Settings.eventColors[el.dataset.colorName]=el.dataset.colorValue);
   document.querySelectorAll('[data-color-kind="tag"]').forEach(el=>v73Settings.tagColors[el.dataset.colorName]=el.dataset.colorValue);
   document.querySelectorAll('[data-color-kind="team"]').forEach(el=>v73Settings.teamOfficialColors[el.dataset.colorName]=el.dataset.colorValue);
-  saveV73Settings(); applyV73Settings(); updateDifficultyOptions(); updateImpactVisibility(); renderLog(); closeSettingsModal();
+  syncMainColorsFromSettings(); saveV73Settings(); applyV73Settings(); updateDifficultyOptions(); updateImpactVisibility(); syncReviewVisibility(); renderLog(); closeSettingsModal();
 }
+
+function syncSettingsTeamOfficialColorsFromMain(){
+  if(!v73Settings.teamOfficialColors) v73Settings.teamOfficialColors={};
+  v73Settings.teamOfficialColors.Home=homeTeamColor||v73Settings.teamOfficialColors.Home||'#185FA5';
+  v73Settings.teamOfficialColors.Away=awayTeamColor||v73Settings.teamOfficialColors.Away||'#BA7517';
+  v73Settings.teamOfficialColors.Officials=refereeColor||v73Settings.teamOfficialColors.Officials||'#F9A825';
+  try{ saveV73Settings(); }catch(e){}
+}
+function syncMainColorsFromSettings(){
+  if(!v73Settings.teamOfficialColors) return;
+  homeTeamColor=v73Settings.teamOfficialColors.Home||homeTeamColor;
+  awayTeamColor=v73Settings.teamOfficialColors.Away||awayTeamColor;
+  refereeColor=v73Settings.teamOfficialColors.Officials||refereeColor;
+  renderTeamPalettes();
+  updateRefereeColorToggles();
+  applyTeamColors();
+  applyRefereeColor();
+}
+
 function openSettingsPalette(kind,name){
   pendingSettingsColorTarget={kind,name};
   document.getElementById('settings-palette-title').textContent='Choose color: '+name;
   let current=getPendingSettingsColor();
   let grid=document.getElementById('settings-palette-grid');
-  grid.innerHTML=SETTINGS_PALETTE.map(c=>`<button type="button" class="palette-swatch" style="background:${c};${c.toLowerCase()===String(current).toLowerCase()?'outline:2px solid var(--color-text-primary);outline-offset:2px;':''}" onclick="chooseSettingsPaletteColor('${c}')"></button>`).join('');
+  let palette=(kind==='team' && typeof TEAM_COLOR_PALETTE!=='undefined')?TEAM_COLOR_PALETTE:SETTINGS_PALETTE;
+  grid.innerHTML=palette.map(c=>`<button type="button" class="palette-swatch" style="background:${c};${c.toLowerCase()===String(current).toLowerCase()?'outline:2px solid var(--color-text-primary);outline-offset:2px;':''}" onclick="chooseSettingsPaletteColor('${c}')"></button>`).join('');
   document.getElementById('settings-palette-custom').value=current||'#ffffff';
   document.getElementById('settings-palette-bg').classList.add('open');
 }
@@ -3634,7 +3943,11 @@ function chooseSettingsPaletteColor(color){
   let {kind,name}=pendingSettingsColorTarget;
   if(kind==='event') v73Settings.eventColors[name]=color;
   if(kind==='tag') v73Settings.tagColors[name]=color;
-  if(kind==='team') v73Settings.teamOfficialColors[name]=color;
+  if(kind==='team'){
+    v73Settings.teamOfficialColors[name]=color;
+    syncMainColorsFromSettings();
+    saveV73Settings();
+  }
   buildSettingsModal();
   closeSettingsPalette();
 }
@@ -3656,6 +3969,13 @@ window.updateImpactVisibility=function(){
   if(wrap && !v73Settings.impactEnabled){wrap.style.display='none';let val=document.getElementById('modal-impact'); if(val) val.value='';}
 };
 
+
+function syncReviewVisibility(){
+  let label=document.getElementById('review-later-check')?.closest('label');
+  if(label) label.style.display=v73Settings.reviewEnabled?'flex':'none';
+  let check=document.getElementById('review-later-check');
+  if(check && !v73Settings.reviewEnabled) check.checked=false;
+}
 function setEventMarker(value){
   let input=document.getElementById('event-marker-value'); if(input) input.value=value||'';
   document.querySelectorAll('#modal-officials-chips .marker-btn').forEach(btn=>btn.classList.remove('active'));
@@ -3807,6 +4127,7 @@ function openEventTypeChangeModal(){
         <div class="settings-toggle-grid">
           <button type="button" class="settings-toggle-btn" id="setting-impact-enabled" onclick="toggleSettingsButton(this)">Impact on game</button>
           <button type="button" class="settings-toggle-btn" id="setting-difficulty-enabled" onclick="toggleSettingsButton(this)">Decision difficulty</button>
+          <button type="button" class="settings-toggle-btn" id="setting-review-enabled" onclick="toggleSettingsButton(this)">Mark for Review</button>
         </div>
       </div>
     </div>
@@ -3835,12 +4156,13 @@ function openEventTypeChangeModal(){
     <div class="settings-section collapsed" data-settings-section>
       <h4 onclick="toggleSettingsSection(this)">Team / officials colors</h4>
       <div class="settings-section-body">
-        <div class="color-button-grid" id="settings-team-official-colors"></div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;">Uses the same color palette as the main-page team and officials color options.</div><div class="color-button-grid" id="settings-team-official-colors"></div>
       </div>
     </div>
 
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeSettingsModal()">Cancel</button>
+      <button class="btn-cancel" onclick="resetSettingsToDefaults()">Reset to Defaults</button>
       <button class="btn-save" onclick="saveSettingsModal()">Save settings</button>
     </div>
   </div>
