@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v103</title>
+<title>Match Notes v104</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -609,12 +609,60 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   border-color:var(--color-border-info);
 }
 
+
+/* v104 mobile clock row alignment fix */
+@media (max-width:620px){
+  .header {
+    align-items:flex-start;
+  }
+  .clock-area {
+    width:100%;
+    display:grid !important;
+    grid-template-columns:minmax(86px,auto) auto 1fr;
+    align-items:center;
+    justify-content:stretch;
+    column-gap:8px;
+  }
+  .clock-action-rows {
+    width:auto !important;
+    min-width:0;
+    align-self:center;
+    justify-self:stretch;
+  }
+  .clock-action-row {
+    justify-content:flex-start !important;
+    flex-wrap:nowrap !important;
+    width:100%;
+  }
+  .clock-action-row .clock-btn,
+  .clock-action-row .dark-toggle {
+    flex:1 1 0;
+    min-width:0;
+    padding-left:5px;
+    padding-right:5px;
+    white-space:nowrap;
+  }
+  .settings-gear-btn {
+    flex:0 0 34px !important;
+  }
+}
+@media (max-width:420px){
+  .clock-area {
+    grid-template-columns:minmax(78px,auto) auto 1fr;
+    column-gap:6px;
+  }
+  .clock-action-row .clock-btn,
+  .clock-action-row .dark-toggle {
+    font-size:10px !important;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval103</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval104</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -3889,7 +3937,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval103_settings');
+  localStorage.removeItem('FalkEval104_settings');
   location.reload();
 }
 function saveSettingsModal(){
