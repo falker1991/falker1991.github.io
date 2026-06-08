@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v104</title>
+<title>Match Notes v105.2</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -657,12 +657,61 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   }
 }
 
+
+/* v105 separate match information fields */
+.match-info-row.v105-match-info {
+  grid-template-columns: repeat(5, 1fr);
+}
+@media (max-width:700px){
+  .match-info-row.v105-match-info {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width:430px){
+  .match-info-row.v105-match-info {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* v106 Match Info subsection */
+#match-info-subsection .match-info-row {
+  margin-bottom:0;
+}
+#match-info-subsection {
+  margin-bottom:1rem;
+}
+
+
+/* v107 Match Info layout: row1=Date/Time/Venue, row2=Competition/Age */
+.match-info-grid-v107{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.match-info-grid-v107 .row1{
+  display:grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap:8px;
+}
+.match-info-grid-v107 .row2{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:8px;
+}
+@media (max-width:700px){
+  .match-info-grid-v107 .row1,
+  .match-info-grid-v107 .row2{
+    grid-template-columns:1fr;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval104</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval105.2</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -699,13 +748,29 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   </div>
 
   <div class="section-hdr" onclick="toggleSection('sec-matchinfo',this)">
-    <p class="section-label" style="margin:0">Match info &amp; officials</p>
+    <p class="section-label" style="margin:0">Pre-match details</p>
     <span class="collapse-icon">▾</span>
   </div>
   <div class="collapsible" id="sec-matchinfo" style="max-height:600px;">
-    <div class="match-info-row">
-      <input placeholder="Match date / venue" id="match-info" style="font-size:12px;" />
-      <input placeholder="Competition / league" id="competition" style="font-size:12px;" />
+    <div class="event-subsection" id="match-info-subsection">
+      <div class="section-hdr" onclick="toggleSection('sec-match-details',this)">
+        <p class="section-label" style="margin:0">Match Info</p>
+        <span class="collapse-icon">▾</span>
+      </div>
+      <div class="collapsible" id="sec-match-details" style="max-height:260px;">
+        <div class="match-info-grid-v107">
+          <div class="row1">
+            <input type="date" placeholder="Game date" id="game-date" style="font-size:12px;" />
+            <input type="time" placeholder="Game time" id="game-time" style="font-size:12px;" />
+            <input placeholder="Game venue" id="game-venue" style="font-size:12px;" />
+          </div>
+          <div class="row2">
+            <input placeholder="Competition / league" id="competition" style="font-size:12px;" />
+            <input placeholder="Age group" id="age-group" style="font-size:12px;" />
+          </div>
+          <input type="hidden" id="match-info" />
+        </div>
+      </div>
     </div>
     <div class="officials-card color-options-wrap">
     <div class="officials-card-header">
@@ -1291,6 +1356,28 @@ let nextSubSameMoment=false, activeSubMomentTimestamp=null;
 let editingEventId=null;
 let pendingSecondYellowEvent=null;
 let pendingPlaceholderEditId=null;
+
+
+function getCombinedMatchInfo(){
+  let date=(document.getElementById('game-date')||{}).value||'';
+  let time=(document.getElementById('game-time')||{}).value||'';
+  let venue=(document.getElementById('game-venue')||{}).value||'';
+  let age=(document.getElementById('age-group')||{}).value||'';
+  return [date,time,venue,age].filter(Boolean).join(' | ');
+}
+function syncCombinedMatchInfo(){
+  let hidden=document.getElementById('match-info');
+  if(hidden) hidden.value=getCombinedMatchInfo();
+}
+function hydrateSeparateMatchInfoFromCombined(){
+  let hidden=(document.getElementById('match-info')||{}).value||'';
+  if(!hidden) return;
+  let parts=hidden.split('|').map(s=>s.trim());
+  if(parts[0] && document.getElementById('game-date') && !document.getElementById('game-date').value && /^\d{4}-\d{2}-\d{2}$/.test(parts[0])) document.getElementById('game-date').value=parts[0];
+  if(parts[1] && document.getElementById('game-time') && !document.getElementById('game-time').value && /^\d{2}:\d{2}/.test(parts[1])) document.getElementById('game-time').value=parts[1];
+  if(parts[2] && document.getElementById('game-venue') && !document.getElementById('game-venue').value) document.getElementById('game-venue').value=parts[2];
+  if(parts[3] && document.getElementById('age-group') && !document.getElementById('age-group').value) document.getElementById('age-group').value=parts[3];
+}
 
 function pad(n){return String(n).padStart(2,'0');}
 function clockStr(s){return pad(Math.floor(s/60))+':'+pad(s%60);}
@@ -3001,7 +3088,7 @@ function getSummary(sourceEvents, exportLabel){
   let ar1=document.getElementById('ar1-name').value||'Unknown';
   let ar2=document.getElementById('ar2-name').value||'Unknown';
   let fourth=document.getElementById('fourth-official').value||'Unknown';
-  let match=document.getElementById('match-info').value||'Unknown match';
+  let match=getCombinedMatchInfo()||'Unknown match';
   let comp=document.getElementById('competition').value||'';
   let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
   let fmt=e=>{
@@ -3032,7 +3119,7 @@ function sanitizeFilenamePart(value, fallback){
 }
 
 function getMatchLogDateForFilename(){
-  let raw=(document.getElementById('match-info')?.value||"").trim();
+  let raw=(getCombinedMatchInfo()||"").trim();
   let found=raw.match(/\b(\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}|\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4})\b/);
   if(found) return found[1].replace(/[\/.]/g,'-');
   let d=new Date();
@@ -3123,7 +3210,7 @@ function exportLogHtml(onlyCurrentFilter){
   try{
     let hn=document.getElementById('home-name').value||'Home';
     let an=document.getElementById('away-name').value||'Away';
-    let match=document.getElementById('match-info').value||'';
+    let match=getCombinedMatchInfo()||'';
     let comp=document.getElementById('competition').value||'';
     let exportSource=sortedEventsCopy(onlyCurrentFilter?getFilteredEventsForCurrentView():events);
     let exportFilterLabel=onlyCurrentFilter?getCurrentFilterLabel():'All events';
@@ -3438,6 +3525,15 @@ function toggleDark(){
 // Restore dark preference
 try{if(localStorage.getItem('referee_dark')==='1'){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='☀️';}}catch(e){}
 
+
+function setMainMatchInfoFieldsFromNewMatch(date,time,venue,age){
+  if(document.getElementById('game-date')) document.getElementById('game-date').value=date||'';
+  if(document.getElementById('game-time')) document.getElementById('game-time').value=time||'';
+  if(document.getElementById('game-venue')) document.getElementById('game-venue').value=venue||'';
+  if(document.getElementById('age-group')) document.getElementById('age-group').value=age||'';
+  syncCombinedMatchInfo();
+}
+
 function openNewMatchModal(){
   // Pre-fill today's date
   let today=new Date();
@@ -3702,8 +3798,12 @@ function saveState(){
       selectedShootoutTeam,shootoutRounds,shootoutClinchDismissed,varEnabled,homeTeamColor,awayTeamColor,refereeColor,
       subsLimited,subsLimitScope,subsLimitType,subsRestrictTotal,subsMaxPerTeam,subsRestrictWindows,subsMaxWindows,subsReentryAllowed,subsRuleNotes,
       fields:{
-        'match-info':document.getElementById('match-info').value,
+        'match-info':getCombinedMatchInfo(),
+        'game-date':document.getElementById('game-date').value,
+        'game-time':document.getElementById('game-time').value,
+        'game-venue':document.getElementById('game-venue').value,
         'competition':document.getElementById('competition').value,
+        'age-group':document.getElementById('age-group').value,
         'home-name':document.getElementById('home-name').value,
         'away-name':document.getElementById('away-name').value,
         'ref-name':document.getElementById('ref-name').value,
@@ -3761,6 +3861,8 @@ function loadState(){
         let el=document.getElementById(id); if(el) el.value=val||'';
       });
     }
+    hydrateSeparateMatchInfoFromCombined();
+    syncCombinedMatchInfo();
     document.getElementById('home-score').textContent=homeScore;
     document.getElementById('away-score').textContent=awayScore;
     document.getElementById('home-pens').textContent=homePens;
@@ -3937,7 +4039,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval104_settings');
+  localStorage.removeItem('FalkEval105.2_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4108,10 +4210,10 @@ _saveAfter.forEach(name=>{
 updateEventSectionVisibility();
 applyV73Settings();
 // Auto-save on text field edits
-['match-info','competition','home-name','away-name','ref-name','ar1-name','ar2-name','fourth-official']
+['game-date','game-time','game-venue','competition','age-group','home-name','away-name','ref-name','ar1-name','ar2-name','fourth-official']
   .forEach(id=>{
     let el=document.getElementById(id);
-    if(el) el.addEventListener('input', saveState);
+    if(el) el.addEventListener('input', function(){syncCombinedMatchInfo(); saveState();});
   });
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
