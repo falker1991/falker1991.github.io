@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v107.1</title>
+<title>Match Notes v108.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -748,12 +748,83 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 
 .event-item.performance-note-item { border-color: var(--official-highlight-border, #185FA5); background: var(--official-highlight-bg, #E6F1FB); }
 
+
+/* v108.1 modal clock behavior */
+body.event-modal-open .header {
+  z-index: 260 !important;
+  width: auto;
+  max-width: min(420px, 96vw);
+  margin-left: auto;
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+body.event-modal-open .header-left,
+body.event-modal-open .clock-action-row .clock-btn:not(#clock-btn):not(.settings-gear-btn),
+body.event-modal-open .clock-action-row .dark-toggle,
+body.event-modal-open .settings-gear-btn {
+  display: none !important;
+}
+body.event-modal-open .clock-area {
+  transform: scale(0.72);
+  transform-origin: top right;
+  pointer-events: auto;
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 6px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+}
+body.event-modal-open .clock-action-rows {
+  min-height: auto;
+}
+body.event-modal-open .clock-action-row {
+  width: auto;
+}
+body.event-modal-open #clock-btn {
+  min-width: 46px !important;
+  min-height: 46px !important;
+  font-size: 22px !important;
+  padding: 6px 10px !important;
+}
+body.event-modal-open .clock-area .clock {
+  font-size: 30px;
+  min-width: 78px;
+}
+body.event-modal-open #modal-bg {
+  z-index: 150;
+}
+#new-match-modal-bg {
+  z-index: 1200;
+}
+body.new-match-modal-open .header {
+  z-index: 1 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+@media (max-width:620px){
+  body.event-modal-open .header {
+    position: fixed !important;
+    top: 6px !important;
+    right: 6px !important;
+    left: auto !important;
+    padding: 0 !important;
+  }
+  body.event-modal-open .clock-area {
+    display: flex !important;
+    width: auto !important;
+    column-gap: 6px;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval107.1</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval108.1</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -2611,10 +2682,11 @@ function openModal(type,isMissed,editMode){
   if(currentIsMissed && currentEventType==='Red Card') activateTogByValue('missed-card-type','Red Card');
   syncMissedCardReasonUI();
   updateImpactVisibility();
+  document.body.classList.add('event-modal-open');
   document.getElementById('modal-bg').classList.add('open');
   setTimeout(()=>{let f=isSub?document.getElementById('sub-player-leaving'):document.getElementById('modal-player'); if(f)f.focus();},50);
 }
-function closeModal(){document.getElementById('modal-bg').classList.remove('open');editingEventId=null;let saveBtn=document.getElementById('btn-save-main');if(saveBtn)saveBtn.textContent='Save event';}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');document.body.classList.remove('event-modal-open');editingEventId=null;let saveBtn=document.getElementById('btn-save-main');if(saveBtn)saveBtn.textContent='Save event';}
 
 function setTog(hiddenId, btn){
   // Single-select within a tog-group: deactivate siblings, activate clicked
@@ -3714,11 +3786,21 @@ function savePerformanceNotes(){
 
 function copyForEval(){navigator.clipboard.writeText('Generate a detailed referee evaluation report based on this match data:\n\n'+getSummary()).then(()=>alert('Match data copied to clipboard. Paste it in a new Claude chat to generate the evaluation report.')).catch(()=>{let ta=document.createElement('textarea');ta.value=getSummary();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Copied! Paste in a new Claude chat for evaluation.');});}
 
-document.getElementById('performance-notes-modal-bg').addEventListener('click',function(e){if(e.target===this)closePerformanceNotesModal();});
-document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
-document.getElementById('period-modal-bg').addEventListener('click',function(e){if(e.target===this)closePeriodModal();});
-document.getElementById('new-match-modal-bg').addEventListener('click',function(e){if(e.target===this)closeNewMatchModal();});
-document.getElementById('placeholder-type-modal-bg').addEventListener('click',function(e){if(e.target===this)closePlaceholderTypeModal();});
+function addModalBackdropClose(id, closeFn){
+  const attach=()=>{
+    const el=document.getElementById(id);
+    if(!el || el._backdropCloseAttached) return;
+    el._backdropCloseAttached=true;
+    el.addEventListener('click',function(e){if(e.target===this)closeFn();});
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',attach,{once:true});
+  else attach();
+}
+addModalBackdropClose('performance-notes-modal-bg', closePerformanceNotesModal);
+addModalBackdropClose('modal-bg', closeModal);
+addModalBackdropClose('period-modal-bg', closePeriodModal);
+addModalBackdropClose('new-match-modal-bg', closeNewMatchModal);
+addModalBackdropClose('placeholder-type-modal-bg', closePlaceholderTypeModal);
 
 function toggleDark(){
   document.body.classList.toggle('dark');
@@ -3747,9 +3829,9 @@ function openNewMatchModal(){
   document.getElementById('nm-halflength').value='45';
   let varBox=document.getElementById('nm-var-enabled'); if(varBox) varBox.checked=false;
   let subsBox=document.getElementById('nm-subs-limited'); if(subsBox) subsBox.checked=false;
-  let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');if(hc)hc.value=homeTeamColor;if(ac)ac.value=awayTeamColor;renderTeamPalettes();updateRefereeColorToggles();applyTeamColors();applyRefereeColor();document.getElementById('new-match-modal-bg').classList.add('open');
+  let hc=document.getElementById('nm-home-color'),ac=document.getElementById('nm-away-color');if(hc)hc.value=homeTeamColor;if(ac)ac.value=awayTeamColor;renderTeamPalettes();updateRefereeColorToggles();applyTeamColors();applyRefereeColor();document.body.classList.add('new-match-modal-open');document.getElementById('new-match-modal-bg').classList.add('open');
 }
-function closeNewMatchModal(){document.getElementById('new-match-modal-bg').classList.remove('open');}
+function closeNewMatchModal(){document.getElementById('new-match-modal-bg').classList.remove('open');document.body.classList.remove('new-match-modal-open');}
 
 function startNewMatch(){
   // Clear localStorage and reset all state
@@ -3874,7 +3956,7 @@ function openSubsLimitModal(){
 function closeSubsLimitModal(){document.getElementById('subs-limit-modal-bg').classList.remove('open');}
 function backToNewMatchFromSubs(){
   closeSubsLimitModal();
-  document.getElementById('new-match-modal-bg').classList.add('open');
+  document.body.classList.add('new-match-modal-open');document.getElementById('new-match-modal-bg').classList.add('open');
 }
 function finishSubsLimitSetup(){
   subsLimited=true;
@@ -4246,7 +4328,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval107.1_settings');
+  localStorage.removeItem('FalkEval108.1_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4674,6 +4756,20 @@ function resetMobileViewport(){
   </div>
 </div>
 
+
+<script>
+// v108.1: safety bindings for controls whose modals may be parsed after the main script.
+(function(){
+  function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true}); else fn(); }
+  ready(function(){
+    var settingsBtn=document.querySelector('.settings-gear-btn');
+    if(settingsBtn){ settingsBtn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); if(typeof window.openSettingsModal==='function') window.openSettingsModal(); }); }
+    document.querySelectorAll('[onclick*="openGameTeamColor"],[onclick*="openRefereeColorOptions"],[onclick*="openTeamColorModal"]').forEach(function(btn){
+      btn.addEventListener('click',function(e){ e.stopPropagation(); }, true);
+    });
+  });
+})();
+</script>
 </body>
 </html>
 
