@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v109.1</title>
+<title>Match Notes v109.2</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -824,7 +824,7 @@ body.new-match-modal-open .header {
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval109.1</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval109.2</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -3402,7 +3402,7 @@ function exportEventTagsAndIdentifiers(ev){
   if(ev.type==='Penalty') add('+ Foul', 'foul');
   if(ev.missedFoul) add('+ Missed Foul', 'missed');
   if(ev.type==='Performance Note') add('Performance Note', 'performance');
-  if(isSubLimitExceededEvent(ev)) add('SUB LIMIT EXCEEDED', 'overlimit');
+  if(typeof isSubEventOverLimit === 'function' && isSubEventOverLimit(ev)) add('SUB LIMIT EXCEEDED', 'overlimit');
   return tags;
 }
 
@@ -4362,7 +4362,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval109.0_settings');
+  localStorage.removeItem('FalkEval109.2_settings');
   location.reload();
 }
 function saveSettingsModal(){
