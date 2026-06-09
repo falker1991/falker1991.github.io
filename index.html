@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v106.0</title>
+<title>Match Notes v106.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -706,12 +706,36 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   }
 }
 
+
+/* v106.1 mobile sticky clock/header fix */
+@media (max-width:620px){
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    transform: none !important;
+    will-change: auto !important;
+    overflow: visible !important;
+    background: var(--color-background-primary) !important;
+  }
+  .clock-area {
+    position: relative !important;
+    z-index: 1000 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .app {
+    overflow: visible !important;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval106.0</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval106.1</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -4109,7 +4133,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval106.0_settings');
+  localStorage.removeItem('FalkEval106.1_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4386,6 +4410,26 @@ function resolveAppMessageModal(result){
 window.alert=function(message){ showAlertModal(message); };
 window.confirm=function(message){ showConfirmModal(message); return false; };
 window.prompt=function(message,defaultValue){ showPromptModal(message,defaultValue); return null; };
+
+
+// v106.1: keep clock/header visible on mobile scroll
+function keepMobileClockVisible(){
+  const header=document.querySelector('.header');
+  const clockArea=document.querySelector('.clock-area');
+  if(header){
+    header.style.transform='none';
+    header.style.opacity='1';
+    header.style.visibility='visible';
+  }
+  if(clockArea){
+    clockArea.style.transform='none';
+    clockArea.style.opacity='1';
+    clockArea.style.visibility='visible';
+  }
+}
+window.addEventListener('scroll', keepMobileClockVisible, {passive:true});
+window.addEventListener('resize', keepMobileClockVisible);
+setTimeout(keepMobileClockVisible, 0);
 
 </script>
 
