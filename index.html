@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v106.1</title>
+<title>Match Notes v107.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -730,12 +730,30 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   }
 }
 
+
+/* v107.0 performance notes */
+.performance-notes-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.performance-notes-grid textarea {
+  min-height:120px;
+  height:120px;
+}
+@media (max-width:700px){
+  .performance-notes-grid { grid-template-columns:1fr; }
+}
+
+
+.event-item.performance-note-item { border-color: var(--official-highlight-border, #185FA5); background: var(--official-highlight-bg, #E6F1FB); }
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval106.1</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval107.1</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -767,6 +785,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
   <div class="end-match-bar" id="end-match-bar">
     <span class="match-ended-label">⏹ Match ended</span>
     <div class="end-match-bar-btns">
+      <button class="export-btn" onclick="openPerformanceNotesModal()">Performance Notes</button>
       <button class="export-btn" onclick="openNewMatchModal()">New Match</button>
     </div>
   </div>
@@ -3051,7 +3070,7 @@ function updateTypeFilterChips(){
   });
 }
 
-const typeIcons={'Goal':'ti-ball-football','Yellow Card':'ti-square','Red Card':'ti-square','Foul':'ti-alert-triangle','Penalty':'ti-circle-dot','Offside':'ti-flag','Corner Kick':'ti-corner-up-right','Goal Kick':'ti-arrow-back-up','Substitution':'ti-arrows-exchange','Injury':'ti-first-aid-kit','VAR Review':'ti-device-tv','Referee Note':'ti-notes','Team Official Warning':'ti-alert-octagon','Throw-in':'ti-arrow-autofit-right','Missed Foul':'ti-alert-triangle','Missed Card':'ti-square','Missed Yellow Card':'ti-square','Missed Red Card':'ti-square','Missed Offside':'ti-flag','Missed Goal':'ti-ball-football','Missed Penalty':'ti-circle-dot','Shootout Attempt':'ti-target-arrow','Placeholder Event':'ti-square-rounded','Missed Team Official Warning':'ti-alert-octagon'};
+const typeIcons={'Performance Note':'ti-notes','Goal':'ti-ball-football','Yellow Card':'ti-square','Red Card':'ti-square','Foul':'ti-alert-triangle','Penalty':'ti-circle-dot','Offside':'ti-flag','Corner Kick':'ti-corner-up-right','Goal Kick':'ti-arrow-back-up','Substitution':'ti-arrows-exchange','Injury':'ti-first-aid-kit','VAR Review':'ti-device-tv','Referee Note':'ti-notes','Team Official Warning':'ti-alert-octagon','Throw-in':'ti-arrow-autofit-right','Missed Foul':'ti-alert-triangle','Missed Card':'ti-square','Missed Yellow Card':'ti-square','Missed Red Card':'ti-square','Missed Offside':'ti-flag','Missed Goal':'ti-ball-football','Missed Penalty':'ti-circle-dot','Shootout Attempt':'ti-target-arrow','Placeholder Event':'ti-square-rounded','Missed Team Official Warning':'ti-alert-octagon'};
 
 function eventButtonStyle(ev){
   let base=displayEventType(ev);
@@ -3311,7 +3330,7 @@ function exportLogHtml(onlyCurrentFilter){
       cmi:!!ev.cmi,
       cre:!!ev.cre,
       review:!!ev.reviewLater,
-      tags:[ev.missed?'Incorrect':null,ev.cmi?'CMI':null,ev.cre?'CRE':null,ev.reviewLater?'Review':null,ev.incorrectDecision?'Incorrect':null,ev.missedFoul?'Missed Foul':null].filter(Boolean),
+      tags:[ev.type==='Performance Note'?'Performance Note':null,ev.missed?'Incorrect':null,ev.cmi?'CMI':null,ev.cre?'CRE':null,ev.reviewLater?'Review':null,ev.incorrectDecision?'Incorrect':null,ev.missedFoul?'Missed Foul':null].filter(Boolean),
       officials:(ev.officials||[]).map(officialDisplayLabel),
       teamName:ev.teamName||'',
       teamStyle:teamTagStyle(ev)||'',
@@ -3600,8 +3619,102 @@ function ensureImportedPeriod(name){
   }
 }
 
+
+// ── v107.0 Performance Notes ────────────────────────────────────────────────
+function openPerformanceNotesModal(){
+  updatePerformanceNoteLabels();
+  ['CR','AR1','AR2','4th'].forEach(id=>{
+    let el=document.getElementById('perf-note-'+id);
+    if(el) el.value='';
+  });
+  document.getElementById('performance-notes-modal-bg').classList.add('open');
+}
+function closePerformanceNotesModal(){
+  document.getElementById('performance-notes-modal-bg').classList.remove('open');
+}
+function updatePerformanceNoteLabels(){
+  const labels={
+    CR:'Referee',
+    AR1:'AR1',
+    AR2:'AR2',
+    '4th':'4th Official'
+  };
+  const names={
+    CR:(document.getElementById('ref-name')||{}).value||'',
+    AR1:(document.getElementById('ar1-name')||{}).value||'',
+    AR2:(document.getElementById('ar2-name')||{}).value||'',
+    '4th':(document.getElementById('fourth-official')||{}).value||''
+  };
+  Object.keys(labels).forEach(id=>{
+    let label=document.getElementById('perf-label-'+id);
+    if(label) label.textContent=labels[id]+(names[id]?' — '+names[id]:'');
+  });
+}
+function performanceNoteTimeStamp(){
+  let last=events.length?events.reduce((best,e)=>eventSortSeconds(e)>eventSortSeconds(best)?e:best,events[0]):null;
+  if(last) return {minute:last.minute||0, second:last.second||0, periodName:last.periodName||currentPeriod()?.name||'Post Match', globalSec:eventSortSeconds(last)+1};
+  let ts=captureEventTimestamp();
+  return {minute:ts.minute||0,second:ts.second||0,periodName:ts.periodName||currentPeriod()?.name||'Post Match',globalSec:ts.globalSec||0};
+}
+function savePerformanceNotes(){
+  let created=0;
+  recordUndoSnapshot();
+  ['CR','AR1','AR2','4th'].forEach((id,idx)=>{
+    let el=document.getElementById('perf-note-'+id);
+    let note=(el&&el.value||'').trim();
+    if(!note) return;
+    let ts=performanceNoteTimeStamp();
+    let ev={
+      id:Date.now()+idx+Math.floor(Math.random()*1000),
+      type:'Performance Note',
+      missed:false,
+      cmi:false,
+      cre:false,
+      team:'none',
+      teamName:'',
+      player:officialDisplayLabel(id),
+      notes:note,
+      decision:'',
+      correctness:'',
+      difficulty:'',
+      cardReason:'',
+      toReason:'',
+      impact:'',
+      missedCardType:'',
+      missedOffsideType:'',
+      incorrectDecision:false,
+      shootoutResult:'',
+      advantageDecision:'',
+      alsoFoul:false,
+      missedFoul:false,
+      reviewLater:false,
+      officials:[id],
+      minute:ts.minute,
+      second:ts.second,
+      periodName:ts.periodName||'Post Match',
+      globalSec:(ts.globalSec||0)+idx,
+      performanceNote:true
+    };
+    events.unshift(ev);
+    created++;
+  });
+  if(!created){
+    showAlertModal('No performance notes were entered.');
+    return;
+  }
+  sortEventsByGameTime();
+  updateStats();
+  renderLog();
+  updateTypeFilterChips();
+  updatePeriodFilterChips();
+  saveState();
+  closePerformanceNotesModal();
+  showAlertModal('Saved '+created+' performance note'+(created===1?'':'s')+'.');
+}
+
 function copyForEval(){navigator.clipboard.writeText('Generate a detailed referee evaluation report based on this match data:\n\n'+getSummary()).then(()=>alert('Match data copied to clipboard. Paste it in a new Claude chat to generate the evaluation report.')).catch(()=>{let ta=document.createElement('textarea');ta.value=getSummary();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Copied! Paste in a new Claude chat for evaluation.');});}
 
+document.getElementById('performance-notes-modal-bg').addEventListener('click',function(e){if(e.target===this)closePerformanceNotesModal();});
 document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('period-modal-bg').addEventListener('click',function(e){if(e.target===this)closePeriodModal();});
 document.getElementById('new-match-modal-bg').addEventListener('click',function(e){if(e.target===this)closeNewMatchModal();});
@@ -4133,7 +4246,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval106.1_settings');
+  localStorage.removeItem('FalkEval107.1_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4431,6 +4544,20 @@ window.addEventListener('scroll', keepMobileClockVisible, {passive:true});
 window.addEventListener('resize', keepMobileClockVisible);
 setTimeout(keepMobileClockVisible, 0);
 
+
+// v107.1 mobile viewport reset after logging events
+function resetMobileViewport(){
+  const vp=document.querySelector('meta[name="viewport"]');
+  if(vp){
+    vp.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1');
+    setTimeout(()=>vp.setAttribute('content','width=device-width, initial-scale=1'),50);
+  }
+  if(document.activeElement && typeof document.activeElement.blur==='function'){
+    document.activeElement.blur();
+  }
+  window.scrollBy(0,0);
+}
+
 </script>
 
 
@@ -4524,6 +4651,25 @@ setTimeout(keepMobileClockVisible, 0);
     <div class="modal-btns">
       <button class="btn-cancel" id="app-message-cancel-btn" onclick="resolveAppMessageModal(false)">Cancel</button>
       <button class="btn-save" id="app-message-ok-btn" onclick="resolveAppMessageModal(true)">OK</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- v107.0 Performance Notes modal -->
+<div class="modal-bg" id="performance-notes-modal-bg">
+  <div class="modal">
+    <h3>Referee Performance Notes</h3>
+    <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;">Add paragraph-length notes for each official. Saved notes will be added to the event log as Performance Note events tagged to the selected official.</p>
+    <div class="performance-notes-grid">
+      <div><label id="perf-label-CR">Referee</label><textarea id="perf-note-CR" placeholder="Performance notes for Referee"></textarea></div>
+      <div><label id="perf-label-AR1">AR1</label><textarea id="perf-note-AR1" placeholder="Performance notes for AR1"></textarea></div>
+      <div><label id="perf-label-AR2">AR2</label><textarea id="perf-note-AR2" placeholder="Performance notes for AR2"></textarea></div>
+      <div><label id="perf-label-4th">4th Official</label><textarea id="perf-note-4th" placeholder="Performance notes for 4th Official"></textarea></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePerformanceNotesModal()">Cancel</button>
+      <button class="btn-save" onclick="savePerformanceNotes()">Save Notes</button>
     </div>
   </div>
 </div>
