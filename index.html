@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v109.2</title>
+<title>Match Notes v109.5</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -819,12 +819,79 @@ body.new-match-modal-open .header {
   }
 }
 
+
+/* mobile sticky clock-only update */
+@media (max-width:620px){
+  .header {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .header-left {
+    margin-bottom: 8px !important;
+  }
+  .clock-area {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--color-background-primary) !important;
+    border-bottom: 0.5px solid var(--color-border-tertiary) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+    padding: 8px 0 !important;
+  }
+}
+
+
+/* team toggle readability fix for white team colors */
+.team-opt {
+  color: var(--team-toggle-text, var(--color-text-secondary)) !important;
+}
+.team-opt:not(.selected) {
+  color: var(--team-toggle-unselected-text, var(--color-text-primary)) !important;
+  border-color: var(--color-border-secondary) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+.team-opt[style*="background: #fff"]:not(.selected),
+.team-opt[style*="background:#fff"]:not(.selected),
+.team-opt[style*="background: white"]:not(.selected),
+.team-opt[style*="background:white"]:not(.selected),
+.team-opt[style*="background-color: #fff"]:not(.selected),
+.team-opt[style*="background-color:#fff"]:not(.selected),
+.team-opt[style*="background-color: white"]:not(.selected),
+.team-opt[style*="background-color:white"]:not(.selected) {
+  color: #1a1a1a !important;
+  border-color: #777 !important;
+  background-color: #fff !important;
+}
+.team-opt.selected {
+  color: var(--team-toggle-selected-text, #fff) !important;
+  font-weight: 700;
+}
+.team-opt.selected[style*="background: #fff"],
+.team-opt.selected[style*="background:#fff"],
+.team-opt.selected[style*="background: white"],
+.team-opt.selected[style*="background:white"],
+.team-opt.selected[style*="background-color: #fff"],
+.team-opt.selected[style*="background-color:#fff"],
+.team-opt.selected[style*="background-color: white"],
+.team-opt.selected[style*="background-color:white"] {
+  color: #1a1a1a !important;
+  border-color: #444 !important;
+  box-shadow: inset 0 0 0 2px #444;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval109.2</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval109.5</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -1089,10 +1156,12 @@ body.new-match-modal-open .header {
       <div class="team-opt selected" id="opt-home" onclick="selectTeam('home')">Home</div>
       <div class="team-opt" id="opt-away" onclick="selectTeam('away')">Away</div>
     </div>
-    <div id="event-time-edit-wrap" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:9px;">
+    <p class="section-label" style="margin-bottom:7px">Event Details</p>
+    <div id="event-time-edit-wrap" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:7px;margin-bottom:9px;align-items:end;">
       <div><label>Minute</label><input type="number" id="edit-event-minute" min="0" max="200" /></div>
       <div><label>Second</label><input type="number" id="edit-event-second" min="0" max="59" /></div>
       <div><label>Period</label><select id="edit-event-period"></select></div>
+      <button type="button" class="clock-btn clock-shift-btn" onclick="backUpEventTimestamp15Seconds()" title="Back up event timestamp by 15 seconds" style="margin-bottom:9px;white-space:nowrap;">−15s</button>
     </div>
     <label id="player-label">Player (name or #)</label>
     <input id="modal-player" placeholder="e.g. #10 or Müller" />
@@ -2285,6 +2354,22 @@ function refreshEventPeriodOptions(selectedName){
   });
   perEl.value=selectedName && names.includes(selectedName) ? selectedName : ((cur&&cur.name&&names.includes(cur.name)) ? cur.name : names[0]);
 }
+
+function backUpEventTimestamp15Seconds(){
+  let minEl=document.getElementById('edit-event-minute');
+  let secEl=document.getElementById('edit-event-second');
+  if(!minEl || !secEl) return;
+  let minute=Math.max(0,parseInt(minEl.value,10)||0);
+  let second=Math.min(59,Math.max(0,parseInt(secEl.value,10)||0));
+  let total=Math.max(0,(minute*60+second)-15);
+  minEl.value=Math.floor(total/60);
+  secEl.value=total%60;
+  minEl.dispatchEvent(new Event('input',{bubbles:true}));
+  secEl.dispatchEvent(new Event('input',{bubbles:true}));
+  minEl.dispatchEvent(new Event('change',{bubbles:true}));
+  secEl.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
 function setModalTimeFields(ts){
   ts=ts||captureEventTimestamp();
   let minEl=document.getElementById('edit-event-minute');
@@ -3462,11 +3547,145 @@ function exportLogHtml(onlyCurrentFilter){
       'function setTab(t,b){tab=t;activate(b);draw();}function setType(t,b){typ=t;activate(b);draw();}function setTag(t,b){tag=t;activate(b);draw();}function setPeriod(t,b){period=t;activate(b);draw();}function setOfficial(t,b){official=t;activate(b);draw();}'+
       'function download(name,content,type){var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},200);}'+
       'function exportSelectedTxt(){var rows=selected();var lines=rows.map(function(e){var offs=e.officials&&e.officials.length?" [Officials: "+e.officials.join(", ")+"]":"";return e.time+" ["+e.shown+"] "+(e.teamName||"")+offs+(e.details?" - "+e.details:"")+(e.tags&&e.tags.length?" {"+e.tags.join(", ")+"}":"");});download("selected-events.txt",lines.join("\\n")||"No selected events","text/plain;charset=utf-8");}'+
-      'function exportSelectedHtml(){var rows=selected();var doc="<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Selected Events</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}.row{border:1px solid #ddd;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;color:#555}.title{font-weight:600}.detail{font-size:12px;color:#555;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}</style></head><body><h2>Selected Match Events</h2>"+rows.map(rowHtml).join("")+"</body></html>";download("selected-events.html",doc,"text/html;charset=utf-8");}'+
+      'function exportSelectedHtml(){var rows=selected();var doc="<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Selected Events</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}.row{border:1px solid #ddd;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;color:#555}.title{font-weight:600}.detail{font-size:12px;color:#555;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}
+/* mobile sticky clock-only update */
+@media (max-width:620px){
+  .header {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .header-left {
+    margin-bottom: 8px !important;
+  }
+  .clock-area {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--color-background-primary) !important;
+    border-bottom: 0.5px solid var(--color-border-tertiary) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+    padding: 8px 0 !important;
+  }
+}
+
+
+/* team toggle readability fix for white team colors */
+.team-opt {
+  color: var(--team-toggle-text, var(--color-text-secondary)) !important;
+}
+.team-opt:not(.selected) {
+  color: var(--team-toggle-unselected-text, var(--color-text-primary)) !important;
+  border-color: var(--color-border-secondary) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+.team-opt[style*="background: #fff"]:not(.selected),
+.team-opt[style*="background:#fff"]:not(.selected),
+.team-opt[style*="background: white"]:not(.selected),
+.team-opt[style*="background:white"]:not(.selected),
+.team-opt[style*="background-color: #fff"]:not(.selected),
+.team-opt[style*="background-color:#fff"]:not(.selected),
+.team-opt[style*="background-color: white"]:not(.selected),
+.team-opt[style*="background-color:white"]:not(.selected) {
+  color: #1a1a1a !important;
+  border-color: #777 !important;
+  background-color: #fff !important;
+}
+.team-opt.selected {
+  color: var(--team-toggle-selected-text, #fff) !important;
+  font-weight: 700;
+}
+.team-opt.selected[style*="background: #fff"],
+.team-opt.selected[style*="background:#fff"],
+.team-opt.selected[style*="background: white"],
+.team-opt.selected[style*="background:white"],
+.team-opt.selected[style*="background-color: #fff"],
+.team-opt.selected[style*="background-color:#fff"],
+.team-opt.selected[style*="background-color: white"],
+.team-opt.selected[style*="background-color:white"] {
+  color: #1a1a1a !important;
+  border-color: #444 !important;
+  box-shadow: inset 0 0 0 2px #444;
+}
+
+</style></head><body><h2>Selected Match Events</h2>"+rows.map(rowHtml).join("")+"</body></html>";download("selected-events.html",doc,"text/html;charset=utf-8");}'+
       'draw();';
     let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title><style>'+ 
       'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.incorrect,.overlimit{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.foul{background:#E6F1FB;color:#0C447C;border:.5px solid #185FA5}.performance{background:#E6F1FB;color:#185FA5}.marker{font-weight:900;border:.5px solid currentColor;border-radius:999px;min-width:18px;text-align:center}.marker.pos{background:#EAF6EA;color:#2E7D32}.marker.neg{background:#FCEBEB;color:#A32D2D}.period{color:#777;background:#f4f4f3}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
-      '</style></head><body>'+ 
+      '
+/* mobile sticky clock-only update */
+@media (max-width:620px){
+  .header {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .header-left {
+    margin-bottom: 8px !important;
+  }
+  .clock-area {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--color-background-primary) !important;
+    border-bottom: 0.5px solid var(--color-border-tertiary) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+    padding: 8px 0 !important;
+  }
+}
+
+
+/* team toggle readability fix for white team colors */
+.team-opt {
+  color: var(--team-toggle-text, var(--color-text-secondary)) !important;
+}
+.team-opt:not(.selected) {
+  color: var(--team-toggle-unselected-text, var(--color-text-primary)) !important;
+  border-color: var(--color-border-secondary) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+.team-opt[style*="background: #fff"]:not(.selected),
+.team-opt[style*="background:#fff"]:not(.selected),
+.team-opt[style*="background: white"]:not(.selected),
+.team-opt[style*="background:white"]:not(.selected),
+.team-opt[style*="background-color: #fff"]:not(.selected),
+.team-opt[style*="background-color:#fff"]:not(.selected),
+.team-opt[style*="background-color: white"]:not(.selected),
+.team-opt[style*="background-color:white"]:not(.selected) {
+  color: #1a1a1a !important;
+  border-color: #777 !important;
+  background-color: #fff !important;
+}
+.team-opt.selected {
+  color: var(--team-toggle-selected-text, #fff) !important;
+  font-weight: 700;
+}
+.team-opt.selected[style*="background: #fff"],
+.team-opt.selected[style*="background:#fff"],
+.team-opt.selected[style*="background: white"],
+.team-opt.selected[style*="background:white"],
+.team-opt.selected[style*="background-color: #fff"],
+.team-opt.selected[style*="background-color:#fff"],
+.team-opt.selected[style*="background-color: white"],
+.team-opt.selected[style*="background-color:white"] {
+  color: #1a1a1a !important;
+  border-color: #444 !important;
+  box-shadow: inset 0 0 0 2px #444;
+}
+
+</style></head><body>'+ 
       '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+formatExportMetadataHtml(meta)+ 
       '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Incorrect</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
       '<div class="filters"><strong>Period:</strong> <button type="button" class="active" onclick="setPeriod(\'all\',this)">All periods</button>'+periodButtons+'</div>'+
@@ -4362,7 +4581,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval109.2_settings');
+  localStorage.removeItem('FalkEval109.5_settings');
   location.reload();
 }
 function saveSettingsModal(){
@@ -4674,6 +4893,22 @@ function resetMobileViewport(){
   window.scrollBy(0,0);
 }
 
+
+function fixTeamToggleReadability(){
+  try {
+    document.querySelectorAll('.team-opt').forEach(btn => {
+      const bg = (btn.style.backgroundColor || btn.style.background || '').toLowerCase().replace(/\s+/g,'');
+      const isWhite = bg === 'white' || bg === '#fff' || bg === '#ffffff' || bg === 'rgb(255,255,255)';
+      if (isWhite) {
+        btn.style.color = '#1a1a1a';
+        btn.style.borderColor = btn.classList.contains('selected') ? '#444' : '#777';
+      }
+    });
+  } catch(e) {}
+}
+document.addEventListener('click', () => setTimeout(fixTeamToggleReadability, 0), true);
+document.addEventListener('DOMContentLoaded', fixTeamToggleReadability);
+
 </script>
 
 
@@ -4817,6 +5052,73 @@ function resetMobileViewport(){
 .log-btns-below{
   margin-bottom: 60px !important;
 }
+
+/* mobile sticky clock-only update */
+@media (max-width:620px){
+  .header {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .header-left {
+    margin-bottom: 8px !important;
+  }
+  .clock-area {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--color-background-primary) !important;
+    border-bottom: 0.5px solid var(--color-border-tertiary) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+    padding: 8px 0 !important;
+  }
+}
+
+
+/* team toggle readability fix for white team colors */
+.team-opt {
+  color: var(--team-toggle-text, var(--color-text-secondary)) !important;
+}
+.team-opt:not(.selected) {
+  color: var(--team-toggle-unselected-text, var(--color-text-primary)) !important;
+  border-color: var(--color-border-secondary) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+.team-opt[style*="background: #fff"]:not(.selected),
+.team-opt[style*="background:#fff"]:not(.selected),
+.team-opt[style*="background: white"]:not(.selected),
+.team-opt[style*="background:white"]:not(.selected),
+.team-opt[style*="background-color: #fff"]:not(.selected),
+.team-opt[style*="background-color:#fff"]:not(.selected),
+.team-opt[style*="background-color: white"]:not(.selected),
+.team-opt[style*="background-color:white"]:not(.selected) {
+  color: #1a1a1a !important;
+  border-color: #777 !important;
+  background-color: #fff !important;
+}
+.team-opt.selected {
+  color: var(--team-toggle-selected-text, #fff) !important;
+  font-weight: 700;
+}
+.team-opt.selected[style*="background: #fff"],
+.team-opt.selected[style*="background:#fff"],
+.team-opt.selected[style*="background: white"],
+.team-opt.selected[style*="background:white"],
+.team-opt.selected[style*="background-color: #fff"],
+.team-opt.selected[style*="background-color:#fff"],
+.team-opt.selected[style*="background-color: white"],
+.team-opt.selected[style*="background-color:white"] {
+  color: #1a1a1a !important;
+  border-color: #444 !important;
+  box-shadow: inset 0 0 0 2px #444;
+}
+
 </style>
 
 <style>
@@ -4834,4 +5136,71 @@ function resetMobileViewport(){
 .log-filters{
   overflow: visible !important;
 }
+
+/* mobile sticky clock-only update */
+@media (max-width:620px){
+  .header {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .header-left {
+    margin-bottom: 8px !important;
+  }
+  .clock-area {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--color-background-primary) !important;
+    border-bottom: 0.5px solid var(--color-border-tertiary) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+    padding: 8px 0 !important;
+  }
+}
+
+
+/* team toggle readability fix for white team colors */
+.team-opt {
+  color: var(--team-toggle-text, var(--color-text-secondary)) !important;
+}
+.team-opt:not(.selected) {
+  color: var(--team-toggle-unselected-text, var(--color-text-primary)) !important;
+  border-color: var(--color-border-secondary) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+.team-opt[style*="background: #fff"]:not(.selected),
+.team-opt[style*="background:#fff"]:not(.selected),
+.team-opt[style*="background: white"]:not(.selected),
+.team-opt[style*="background:white"]:not(.selected),
+.team-opt[style*="background-color: #fff"]:not(.selected),
+.team-opt[style*="background-color:#fff"]:not(.selected),
+.team-opt[style*="background-color: white"]:not(.selected),
+.team-opt[style*="background-color:white"]:not(.selected) {
+  color: #1a1a1a !important;
+  border-color: #777 !important;
+  background-color: #fff !important;
+}
+.team-opt.selected {
+  color: var(--team-toggle-selected-text, #fff) !important;
+  font-weight: 700;
+}
+.team-opt.selected[style*="background: #fff"],
+.team-opt.selected[style*="background:#fff"],
+.team-opt.selected[style*="background: white"],
+.team-opt.selected[style*="background:white"],
+.team-opt.selected[style*="background-color: #fff"],
+.team-opt.selected[style*="background-color:#fff"],
+.team-opt.selected[style*="background-color: white"],
+.team-opt.selected[style*="background-color:white"] {
+  color: #1a1a1a !important;
+  border-color: #444 !important;
+  box-shadow: inset 0 0 0 2px #444;
+}
+
 </style>
