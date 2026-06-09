@@ -824,7 +824,7 @@ body.new-match-modal-open .header {
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval108.1</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval109.0</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -1541,6 +1541,7 @@ function htmlColorDot(color){
 }
 function formatExportMetadataHtml(meta){
   let row=(label,value,color)=>'<tr><th>'+escapeHtml(label)+'</th><td>'+escapeHtml(value||'')+(color?htmlColorDot(color):'')+'</td></tr>';
+  let officialsColor=meta.officialsColor||'#F9A825';
   return '<table class="meta-table">'+
     row('Game date',meta.gameDate)+
     row('Game time',meta.gameTime)+
@@ -1549,11 +1550,11 @@ function formatExportMetadataHtml(meta){
     row('Age group',meta.ageGroup)+
     row('Home team',meta.homeTeam,meta.homeColor)+
     row('Away team',meta.awayTeam,meta.awayColor)+
-    row('Referee',meta.referee)+
-    row('AR1',meta.ar1)+
-    row('AR2',meta.ar2)+
-    row('4th Official',meta.fourthOfficial)+
-    row('Officials color',meta.officialsColor,meta.officialsColor)+
+    row('Referee',meta.referee,officialsColor)+
+    row('AR1',meta.ar1,officialsColor)+
+    row('AR2',meta.ar2,officialsColor)+
+    row('4th Official',meta.fourthOfficial,officialsColor)+
+    row('Officials color',meta.officialsColor,officialsColor)+
     row('Score',meta.score)+
   '</table>';
 }
@@ -3385,6 +3386,30 @@ function exportFilteredLog(){
 
 function exportFilteredLogHtml(){ exportLogHtml(true); }
 
+function exportEventTagsAndIdentifiers(ev){
+  let tags=[];
+  function add(label, cls){ if(label && !tags.some(t=>t.label===label)) tags.push({label:label, cls:cls||''}); }
+  if(ev.teamName) add(ev.teamName, 'team');
+  if(ev.periodName) add(ev.periodName, 'period');
+  if(ev.marker==='positive') add('+', 'marker pos');
+  if(ev.marker==='negative') add('−', 'marker neg');
+  if(ev.missed) add('MISSED', 'missed');
+  if(ev.incorrectDecision) add('Incorrect decision', 'incorrect');
+  if(ev.cmi) add('CMI', 'cmi');
+  if(ev.cre) add('CRE', 'cre');
+  if(ev.reviewLater) add('Review', 'review');
+  if(isRecordedFoulEvent(ev) && !['Foul','Penalty'].includes(baseEventType(ev.type))) add('+ Foul', 'foul');
+  if(ev.type==='Penalty') add('+ Foul', 'foul');
+  if(ev.missedFoul) add('+ Missed Foul', 'missed');
+  if(ev.type==='Performance Note') add('Performance Note', 'performance');
+  if(isSubLimitExceededEvent(ev)) add('SUB LIMIT EXCEEDED', 'overlimit');
+  return tags;
+}
+
+function exportEventPlainTags(ev, includeMarker){
+  return exportEventTagsAndIdentifiers(ev).filter(t=>includeMarker!==false || !String(t.cls||'').includes('marker')).map(t=>t.label);
+}
+
 function exportLogHtml(onlyCurrentFilter){
   try{
     let meta=getExportMatchMetadata();
@@ -3402,8 +3427,12 @@ function exportLogHtml(onlyCurrentFilter){
       cmi:!!ev.cmi,
       cre:!!ev.cre,
       review:!!ev.reviewLater,
-      tags:[ev.type==='Performance Note'?'Performance Note':null,ev.missed?'Incorrect':null,ev.cmi?'CMI':null,ev.cre?'CRE':null,ev.reviewLater?'Review':null,ev.incorrectDecision?'Incorrect':null,ev.missedFoul?'Missed Foul':null].filter(Boolean),
+      marker:ev.marker||'',
+      tags:exportEventPlainTags(ev,true),
+      exportTags:exportEventTagsAndIdentifiers(ev),
+      officialIds:(ev.officials||[]),
       officials:(ev.officials||[]).map(officialDisplayLabel),
+      officialsColor:meta.officialsColor||'#F9A825',
       teamName:ev.teamName||'',
       teamStyle:teamTagStyle(ev)||'',
       periodName:ev.periodName||'',
@@ -3414,31 +3443,36 @@ function exportLogHtml(onlyCurrentFilter){
     let typeButtons=types.map(t=>'<button type="button" onclick="setType('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
     let tags=[...new Set(exported.flatMap(e=>e.tags||[]))].filter(Boolean).sort();
     let tagButtons=tags.map(t=>'<button type="button" onclick="setTag('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
+    let exportOfficials=OFFICIALS.filter(o=>exported.some(e=>(e.officialIds||[]).includes(o.id)));
+    let officialButtons=exportOfficials.map(o=>'<button type="button" onclick="setOfficial('+escapeHtml(JSON.stringify(o.id))+',this)">'+escapeHtml(o.label)+'</button>').join('');
     let exportPeriods=[...new Set(exported.map(e=>e.periodName).filter(Boolean))];
     let periodButtons=exportPeriods.map(t=>'<button type="button" onclick="setPeriod('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
     let exportedJson=JSON.stringify(exported).replace(/</g,'\\u003c');
     let exportedMetaJson=JSON.stringify(meta).replace(/</g,'\\u003c');
     let exportedScript = ''+
-      'var metadata='+exportedMetaJson+';var data='+exportedJson+';var tab="all";var typ="all";var tag="all";var period="all";'+
+      'var metadata='+exportedMetaJson+';var data='+exportedJson+';var tab="all";var typ="all";var tag="all";var period="all";var official="all";'+
       'function esc(s){return String(s||"").replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\\"":"&quot;"}[c]||c;});}'+
-      'function rowHtml(e){var h="<div class=\\"row\\" style=\\""+(e.style||"")+"\\">";h+="<div class=\\"time\\">"+esc(e.time)+"</div>";h+="<div class=\\"title\\">"+(e.missed?"<span class=\\"tag missed\\">MISSED</span> ":"")+esc(e.shown)+"</div>";if(e.details){h+="<div class=\\"detail\\">"+esc(e.details)+"</div>";}h+="<div>";if(e.teamName){h+="<span class=\\"tag\\">"+esc(e.teamName)+"</span>";}if(e.periodName){h+="<span class=\\"tag\\">"+esc(e.periodName)+"</span>";}if(e.cmi){h+="<span class=\\"tag cmi\\">CMI</span>";}if(e.cre){h+="<span class=\\"tag cre\\">CRE</span>";}if(e.review){h+="<span class=\\"tag review\\">REVIEW</span>";}if(e.tags){for(var j=0;j<e.tags.length;j++){if(["Missed","CMI","CRE","Review"].indexOf(e.tags[j])<0)h+="<span class=\\"tag\\">"+esc(e.tags[j])+"</span>";}}h+="</div></div>";return h;}'+
-      'function matches(e){return (tab==="all"||(tab==="missed"&&e.missed)||(tab==="cmi"&&e.cmi)||(tab==="cre"&&e.cre)||(tab==="review"&&e.review))&&(typ==="all"||e.type===typ||(typ==="Foul"&&/Missed foul/.test(e.details)))&&(tag==="all"||(e.tags||[]).indexOf(tag)>=0)&&(period==="all"||e.periodName===period);}'+
+      'function tagClass(t){var c=String((t&&t.cls)||"").trim();return "tag"+(c?" "+c:"");}function tagTextList(e,includeMarker){var out=[];var arr=e.exportTags||[];for(var i=0;i<arr.length;i++){if(includeMarker===false&&String(arr[i].cls||"").indexOf("marker")>=0)continue;out.push(arr[i].label);}return out;}function rowHtml(e){var h="<div class=\"row\" style=\""+(e.style||"")+"\">";h+="<div class=\"time\">"+esc(e.time)+"</div>";h+="<div class=\"title\">"+esc(e.shown)+"</div>";if(e.details){h+="<div class=\"detail\">"+esc(e.details)+"</div>";}h+="<div>";if(e.exportTags){for(var k=0;k<e.exportTags.length;k++){var tg=e.exportTags[k];h+="<span class=\""+esc(tagClass(tg))+"\">"+esc(tg.label)+"</span>";}}if(e.officials&&e.officials.length){for(var i=0;i<e.officials.length;i++){var oc=e.officialsColor||metadata.officialsColor||"#F9A825";h+="<span class=\"tag official\" style=\"background:"+esc(alpha(oc,.22))+";color:"+esc(bestText(oc))+";border-color:"+esc(oc)+"\">"+esc(e.officials[i])+"</span>";}}h+="</div></div>";return h;}'+
+      'function hexToRgbLocal(hex){hex=String(hex||"#ffffff").replace("#","");if(hex.length===3)hex=hex.split("").map(function(c){return c+c;}).join("");var n=parseInt(hex,16);return isNaN(n)?{r:249,g:168,b:37}:{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}'+
+      'function alpha(hex,a){var c=hexToRgbLocal(hex);return "rgba("+c.r+","+c.g+","+c.b+","+a+")";}function bestText(hex){var c=hexToRgbLocal(hex);return ((c.r*299+c.g*587+c.b*114)/1000)>150?"#1a1a1a":"#ffffff";}'+
+      'function matches(e){return (tab==="all"||(tab==="missed"&&e.missed)||(tab==="cmi"&&e.cmi)||(tab==="cre"&&e.cre)||(tab==="review"&&e.review))&&(typ==="all"||e.type===typ||(typ==="Foul"&&/Missed foul/.test(e.details)))&&(tag==="all"||(e.tags||[]).indexOf(tag)>=0)&&(period==="all"||e.periodName===period)&&(official==="all"||(e.officialIds||[]).indexOf(official)>=0);}'+
       'function selected(){var a=data.filter(matches);if(tag!=="all"){a=a.slice().sort(function(x,y){return ((y.tags||[]).indexOf(tag)>=0)-((x.tags||[]).indexOf(tag)>=0)||String(x.time).localeCompare(String(y.time));});}return a;}'+
       'function draw(){var rows=selected();document.getElementById("selected-count").textContent=rows.length+" selected";document.getElementById("rows").innerHTML=rows.map(rowHtml).join("")||"<p>No events match filter.</p>";}'+
       'function activate(b){var btns=b.parentNode.querySelectorAll("button");for(var i=0;i<btns.length;i++){btns[i].classList.remove("active");}b.classList.add("active");}'+
-      'function setTab(t,b){tab=t;activate(b);draw();}function setType(t,b){typ=t;activate(b);draw();}function setTag(t,b){tag=t;activate(b);draw();}function setPeriod(t,b){period=t;activate(b);draw();}'+
+      'function setTab(t,b){tab=t;activate(b);draw();}function setType(t,b){typ=t;activate(b);draw();}function setTag(t,b){tag=t;activate(b);draw();}function setPeriod(t,b){period=t;activate(b);draw();}function setOfficial(t,b){official=t;activate(b);draw();}'+
       'function download(name,content,type){var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},200);}'+
-      'function exportSelectedTxt(){var rows=selected();var lines=rows.map(function(e){return e.time+" ["+e.shown+"] "+(e.teamName||"")+(e.details?" - "+e.details:"")+(e.tags&&e.tags.length?" {"+e.tags.join(", ")+"}":"");});download("selected-events.txt",lines.join("\\n")||"No selected events","text/plain;charset=utf-8");}'+
+      'function exportSelectedTxt(){var rows=selected();var lines=rows.map(function(e){var offs=e.officials&&e.officials.length?" [Officials: "+e.officials.join(", ")+"]":"";return e.time+" ["+e.shown+"] "+(e.teamName||"")+offs+(e.details?" - "+e.details:"")+(e.tags&&e.tags.length?" {"+e.tags.join(", ")+"}":"");});download("selected-events.txt",lines.join("\\n")||"No selected events","text/plain;charset=utf-8");}'+
       'function exportSelectedHtml(){var rows=selected();var doc="<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Selected Events</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}.row{border:1px solid #ddd;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;color:#555}.title{font-weight:600}.detail{font-size:12px;color:#555;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}</style></head><body><h2>Selected Match Events</h2>"+rows.map(rowHtml).join("")+"</body></html>";download("selected-events.html",doc,"text/html;charset=utf-8");}'+
       'draw();';
     let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title><style>'+ 
-      'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
+      'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.incorrect,.overlimit{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.foul{background:#E6F1FB;color:#0C447C;border:.5px solid #185FA5}.performance{background:#E6F1FB;color:#185FA5}.marker{font-weight:900;border:.5px solid currentColor;border-radius:999px;min-width:18px;text-align:center}.marker.pos{background:#EAF6EA;color:#2E7D32}.marker.neg{background:#FCEBEB;color:#A32D2D}.period{color:#777;background:#f4f4f3}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
       '</style></head><body>'+ 
       '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+formatExportMetadataHtml(meta)+ 
       '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Incorrect</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
       '<div class="filters"><strong>Period:</strong> <button type="button" class="active" onclick="setPeriod(\'all\',this)">All periods</button>'+periodButtons+'</div>'+
       '<div class="filters"><strong>Type:</strong> <button type="button" class="active" onclick="setType(\'all\',this)">All types</button>'+typeButtons+'</div>'+
-      '<div class="filters"><strong>Tag:</strong> <button type="button" class="active" onclick="setTag(\'all\',this)">All tags</button>'+tagButtons+'</div>'+
+      '<div class="filters"><strong>Tag:</strong> <button type="button" class="active" onclick="setTag(\'all\',this)">All tags</button>'+tagButtons+'</div>'+ 
+      '<div class="filters"><strong>Official:</strong> <button type="button" class="active" onclick="setOfficial(\'all\',this)">All officials</button>'+officialButtons+'</div>'+
       '<div class="filters"><button type="button" onclick="exportSelectedTxt()">Export selected TXT</button><button type="button" onclick="exportSelectedHtml()">Export selected HTML</button></div><div id="rows"></div>'+ 
       '<script>'+exportedScript+'<\/script>'+ 
       '<p style="font-size:11px;color:#888">Exported '+escapeHtml(new Date().toLocaleString())+'</p></body></html>';
@@ -4328,7 +4362,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval108.1_settings');
+  localStorage.removeItem('FalkEval109.0_settings');
   location.reload();
 }
 function saveSettingsModal(){
