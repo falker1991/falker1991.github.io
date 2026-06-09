@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v105.3</title>
+<title>Match Notes v106.0</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -711,7 +711,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval105.3</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval106.0</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -1377,6 +1377,71 @@ function hydrateSeparateMatchInfoFromCombined(){
   if(parts[1] && document.getElementById('game-time') && !document.getElementById('game-time').value && /^\d{2}:\d{2}/.test(parts[1])) document.getElementById('game-time').value=parts[1];
   if(parts[2] && document.getElementById('game-venue') && !document.getElementById('game-venue').value) document.getElementById('game-venue').value=parts[2];
   if(parts[3] && document.getElementById('age-group') && !document.getElementById('age-group').value) document.getElementById('age-group').value=parts[3];
+}
+
+
+function getExportMatchMetadata(){
+  let hn=(document.getElementById('home-name')||{}).value||'Home';
+  let an=(document.getElementById('away-name')||{}).value||'Away';
+  let meta={
+    gameDate:(document.getElementById('game-date')||{}).value||'',
+    gameTime:(document.getElementById('game-time')||{}).value||'',
+    venue:(document.getElementById('game-venue')||{}).value||'',
+    competition:(document.getElementById('competition')||{}).value||'',
+    ageGroup:(document.getElementById('age-group')||{}).value||'',
+    homeTeam:hn,
+    awayTeam:an,
+    homeColor:homeTeamColor||'#185FA5',
+    awayColor:awayTeamColor||'#BA7517',
+    referee:(document.getElementById('ref-name')||{}).value||'Unknown',
+    ar1:(document.getElementById('ar1-name')||{}).value||'Unknown',
+    ar2:(document.getElementById('ar2-name')||{}).value||'Unknown',
+    fourthOfficial:(document.getElementById('fourth-official')||{}).value||'Unknown',
+    officialsColor:refereeColor||'#F9A825',
+    score:hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')
+  };
+  meta.combined=[meta.gameDate,meta.gameTime,meta.venue,meta.competition,meta.ageGroup].filter(Boolean).join(' | ');
+  return meta;
+}
+function formatExportMetadataText(meta){
+  return [
+    'Game date: '+(meta.gameDate||''),
+    'Game time: '+(meta.gameTime||''),
+    'Game venue: '+(meta.venue||''),
+    'Competition / League: '+(meta.competition||''),
+    'Age group: '+(meta.ageGroup||''),
+    'Home team: '+(meta.homeTeam||'Home'),
+    'Home team color: '+(meta.homeColor||''),
+    'Away team: '+(meta.awayTeam||'Away'),
+    'Away team color: '+(meta.awayColor||''),
+    'Referee: '+(meta.referee||'Unknown'),
+    'AR1: '+(meta.ar1||'Unknown'),
+    'AR2: '+(meta.ar2||'Unknown'),
+    '4th Official: '+(meta.fourthOfficial||'Unknown'),
+    'Officials color: '+(meta.officialsColor||''),
+    'Score: '+(meta.score||'')
+  ].join('\n');
+}
+function htmlColorDot(color){
+  return '<span style="display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #999;background:'+escapeHtml(color||'#fff')+';vertical-align:-1px;margin-left:4px;"></span>';
+}
+function formatExportMetadataHtml(meta){
+  let row=(label,value,color)=>'<tr><th>'+escapeHtml(label)+'</th><td>'+escapeHtml(value||'')+(color?htmlColorDot(color):'')+'</td></tr>';
+  return '<table class="meta-table">'+
+    row('Game date',meta.gameDate)+
+    row('Game time',meta.gameTime)+
+    row('Game venue',meta.venue)+
+    row('Competition / League',meta.competition)+
+    row('Age group',meta.ageGroup)+
+    row('Home team',meta.homeTeam,meta.homeColor)+
+    row('Away team',meta.awayTeam,meta.awayColor)+
+    row('Referee',meta.referee)+
+    row('AR1',meta.ar1)+
+    row('AR2',meta.ar2)+
+    row('4th Official',meta.fourthOfficial)+
+    row('Officials color',meta.officialsColor,meta.officialsColor)+
+    row('Score',meta.score)+
+  '</table>';
 }
 
 function pad(n){return String(n).padStart(2,'0');}
@@ -3084,13 +3149,12 @@ function closePopover(){document.getElementById('officials-popover').style.displ
 function getSummary(sourceEvents, exportLabel){
   sourceEvents=sortedEventsCopy(Array.isArray(sourceEvents)?sourceEvents:events);
   exportLabel=exportLabel||'All events';
-  let ref=document.getElementById('ref-name').value||'Unknown';
-  let ar1=document.getElementById('ar1-name').value||'Unknown';
-  let ar2=document.getElementById('ar2-name').value||'Unknown';
-  let fourth=document.getElementById('fourth-official').value||'Unknown';
-  let match=getCombinedMatchInfo()||'Unknown match';
-  let comp=document.getElementById('competition').value||'';
-  let hn=document.getElementById('home-name').value||'Home',an=document.getElementById('away-name').value||'Away';
+  let meta=getExportMatchMetadata();
+  let ref=meta.referee||'Unknown';
+  let ar1=meta.ar1||'Unknown';
+  let ar2=meta.ar2||'Unknown';
+  let fourth=meta.fourthOfficial||'Unknown';
+  let hn=meta.homeTeam||'Home',an=meta.awayTeam||'Away';
   let fmt=e=>{
     let flags=[e.missed?'MISSED':null,e.cmi?'CMI':null,e.cre?'CRE':null,e.incorrectDecision?'INCORRECT-DECISION':null].filter(Boolean).join(',');
     let extras=[e.missedFoul?'Missed foul':'',e.missedCardType?('Missed '+e.missedCardType):'',e.missedOffsideType,e.missed?e.impact:'',e.shootoutResult,e.cardReason,e.toReason,e.stoppageTime?('Stoppage '+e.stoppageTime):''].filter(Boolean).join(', ');
@@ -3103,7 +3167,7 @@ function getSummary(sourceEvents, exportLabel){
     return o.label+':\n'+oEvs.slice().reverse().map(e=>'  '+pad(e.minute)+':'+pad(e.second||0)+' ['+e.type+']'+(e.cmi?' CMI':'')+(e.cre?' CRE':'')+(e.decision?' - '+e.decision:'')+(e.notes?' - '+e.notes:'')).join('\n');
   }).join('\n\n');
   let periodSummary=periods.map(p=>p.name+(p.length?' ('+p.length+' min)':'')).join(', ');
-  return 'Match: '+match+(comp?' | '+comp:'')+'\nExport filter: '+exportLabel+'\nVAR: '+(varEnabled?'Used':'Not Used')+'\nPeriod lengths: '+getPeriodLengthSummary()+'\nSubstitution rules: '+getSubRuleSummary()+'\nPeriods: '+(periodSummary||'Not recorded')+'\nReferee: '+ref+'\nAR1: '+ar1+'\nAR2: '+ar2+'\n4th Official: '+fourth+'\n'+hn+' '+homeScore+' - '+awayScore+' '+an+(periods.some(p=>p.type==='shootout')?' (Pens: '+homePens+'-'+awayPens+')':'')+'\n\nSELECTED EVENTS:\n'+( sourceEvents.slice().reverse().map(fmt).join('\n')||'None')+'\n\nPERIOD SUMMARY NOTES:\n'+(sourceEvents.filter(e=>e.type==='Period Summary').slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(sourceEvents.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(sourceEvents.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(sourceEvents.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
+  return 'MATCH INFO:\n'+formatExportMetadataText(meta)+'\nExport filter: '+exportLabel+'\nVAR: '+(varEnabled?'Used':'Not Used')+'\nPeriod lengths: '+getPeriodLengthSummary()+'\nSubstitution rules: '+getSubRuleSummary()+'\nPeriods: '+(periodSummary||'Not recorded')+'\n\nSELECTED EVENTS:\n'+( sourceEvents.slice().reverse().map(fmt).join('\n')||'None')+'\n\nPERIOD SUMMARY NOTES:\n'+(sourceEvents.filter(e=>e.type==='Period Summary').slice().reverse().map(fmt).join('\n')||'None')+'\n\nMISSED CALLS:\n'+(sourceEvents.filter(e=>e.missed).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCMI:\n'+(sourceEvents.filter(e=>e.cmi).slice().reverse().map(fmt).join('\n')||'None')+'\n\nCRE:\n'+(sourceEvents.filter(e=>e.cre).slice().reverse().map(fmt).join('\n')||'None')+'\n\nPER-OFFICIAL BREAKDOWN:\n'+officialBreakdown;
 }
 
 function escapeHtml(s){
@@ -3208,10 +3272,11 @@ function exportFilteredLogHtml(){ exportLogHtml(true); }
 
 function exportLogHtml(onlyCurrentFilter){
   try{
-    let hn=document.getElementById('home-name').value||'Home';
-    let an=document.getElementById('away-name').value||'Away';
-    let match=getCombinedMatchInfo()||'';
-    let comp=document.getElementById('competition').value||'';
+    let meta=getExportMatchMetadata();
+    let hn=meta.homeTeam||'Home';
+    let an=meta.awayTeam||'Away';
+    let match=meta.combined||'';
+    let comp=meta.competition||'';
     let exportSource=sortedEventsCopy(onlyCurrentFilter?getFilteredEventsForCurrentView():events);
     let exportFilterLabel=onlyCurrentFilter?getCurrentFilterLabel():'All events';
     let exported=exportSource.slice().reverse().map(ev=>({
@@ -3237,8 +3302,9 @@ function exportLogHtml(onlyCurrentFilter){
     let exportPeriods=[...new Set(exported.map(e=>e.periodName).filter(Boolean))];
     let periodButtons=exportPeriods.map(t=>'<button type="button" onclick="setPeriod('+escapeHtml(JSON.stringify(t))+',this)">'+escapeHtml(t)+'</button>').join('');
     let exportedJson=JSON.stringify(exported).replace(/</g,'\\u003c');
+    let exportedMetaJson=JSON.stringify(meta).replace(/</g,'\\u003c');
     let exportedScript = ''+
-      'var data='+exportedJson+';var tab="all";var typ="all";var tag="all";var period="all";'+
+      'var metadata='+exportedMetaJson+';var data='+exportedJson+';var tab="all";var typ="all";var tag="all";var period="all";'+
       'function esc(s){return String(s||"").replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\\"":"&quot;"}[c]||c;});}'+
       'function rowHtml(e){var h="<div class=\\"row\\" style=\\""+(e.style||"")+"\\">";h+="<div class=\\"time\\">"+esc(e.time)+"</div>";h+="<div class=\\"title\\">"+(e.missed?"<span class=\\"tag missed\\">MISSED</span> ":"")+esc(e.shown)+"</div>";if(e.details){h+="<div class=\\"detail\\">"+esc(e.details)+"</div>";}h+="<div>";if(e.teamName){h+="<span class=\\"tag\\">"+esc(e.teamName)+"</span>";}if(e.periodName){h+="<span class=\\"tag\\">"+esc(e.periodName)+"</span>";}if(e.cmi){h+="<span class=\\"tag cmi\\">CMI</span>";}if(e.cre){h+="<span class=\\"tag cre\\">CRE</span>";}if(e.review){h+="<span class=\\"tag review\\">REVIEW</span>";}if(e.tags){for(var j=0;j<e.tags.length;j++){if(["Missed","CMI","CRE","Review"].indexOf(e.tags[j])<0)h+="<span class=\\"tag\\">"+esc(e.tags[j])+"</span>";}}h+="</div></div>";return h;}'+
       'function matches(e){return (tab==="all"||(tab==="missed"&&e.missed)||(tab==="cmi"&&e.cmi)||(tab==="cre"&&e.cre)||(tab==="review"&&e.review))&&(typ==="all"||e.type===typ||(typ==="Foul"&&/Missed foul/.test(e.details)))&&(tag==="all"||(e.tags||[]).indexOf(tag)>=0)&&(period==="all"||e.periodName===period);}'+
@@ -3253,7 +3319,7 @@ function exportLogHtml(onlyCurrentFilter){
     let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Log</title><style>'+ 
       'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}button{border:.5px solid #ccc;border-radius:999px;background:#f4f4f3;padding:4px 10px;margin:2px;cursor:pointer;font-size:12px}.active{background:#185FA5;color:white;border-color:#0C447C}.row{border:.5px solid #e0dfdb;border-radius:8px;padding:8px;margin:6px 0}.time{font-family:monospace;font-size:12px;color:#555}.title{font-weight:600;font-size:13px}.detail{font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap}.tag{font-size:10px;border-radius:4px;padding:1px 5px;background:#eee;margin-right:3px;display:inline-block}.missed{background:#FCEBEB;color:#791F1F;border:.5px solid #A32D2D}.cmi{background:#FFF3CD;color:#7A5800}.cre{background:#F3E8FF;color:#5B1FA5}.review{background:#E6F1FB;color:#185FA5}.official{background:#E6F1FB;color:#185FA5;border:.5px solid #185FA5}.filters{margin:8px 0 10px}.meta{color:#555;font-size:13px}'+
       '</style></head><body>'+ 
-      '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+(match?'<p class="meta">'+escapeHtml(match)+'</p>':'')+(comp?'<p class="meta">'+escapeHtml(comp)+'</p>':'')+'<p class="meta">'+escapeHtml(hn)+' '+homeScore+' – '+awayScore+' '+escapeHtml(an)+'</p>'+ 
+      '<h2>Match Event Log</h2><p class="meta"><strong>Export filter:</strong> '+escapeHtml(exportFilterLabel)+'</p>'+formatExportMetadataHtml(meta)+ 
       '<p class="meta" id="selected-count"></p><div class="filters"><button type="button" class="active" onclick="setTab(\'all\',this)">All</button><button type="button" onclick="setTab(\'missed\',this)">Incorrect</button><button type="button" onclick="setTab(\'cmi\',this)">CMI</button><button type="button" onclick="setTab(\'cre\',this)">CRE</button><button type="button" onclick="setTab(\'review\',this)">Review</button></div>'+ 
       '<div class="filters"><strong>Period:</strong> <button type="button" class="active" onclick="setPeriod(\'all\',this)">All periods</button>'+periodButtons+'</div>'+
       '<div class="filters"><strong>Type:</strong> <button type="button" class="active" onclick="setType(\'all\',this)">All types</button>'+typeButtons+'</div>'+
@@ -4043,7 +4109,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval105.3_settings');
+  localStorage.removeItem('FalkEval106.0_settings');
   location.reload();
 }
 function saveSettingsModal(){
