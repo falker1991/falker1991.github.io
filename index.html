@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes v105.2</title>
+<title>Match Notes v105.3</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root {
@@ -711,7 +711,7 @@ body.dark .ref-color-toggle.other { background: #4A4A4A; color: #F0F0EE; border-
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-left"><h2>Match Notes</h2><p>FalkEval105.2</p></div>
+    <div class="header-left"><h2>Match Notes</h2><p>FalkEval105.3</p></div>
     <div class="clock-area">
       <div>
         <div class="clock" id="clock">00:00</div>
@@ -3587,9 +3587,12 @@ function startNewMatch(){
   document.getElementById('clock-btn').innerHTML='<i class="ti ti-player-play"></i>';
   document.getElementById('clock-btn').classList.remove('active');
   // Set field values
-  let matchInfoStr=''+(date?date+' ':'')+( time?time+' ':'')+venue;
-  document.getElementById('match-info').value=matchInfoStr.trim();
-  document.getElementById('competition').value=comp+(age?' | '+age:'');
+  if(document.getElementById('game-date')) document.getElementById('game-date').value=date||'';
+  if(document.getElementById('game-time')) document.getElementById('game-time').value=time||'';
+  if(document.getElementById('game-venue')) document.getElementById('game-venue').value=venue||'';
+  if(document.getElementById('competition')) document.getElementById('competition').value=comp||'';
+  if(document.getElementById('age-group')) document.getElementById('age-group').value=age||'';
+  if(typeof syncCombinedMatchInfo==='function') syncCombinedMatchInfo();
   document.getElementById('home-name').value=hn;
   document.getElementById('away-name').value=an;
   document.getElementById('ref-name').value=ref;
@@ -3608,6 +3611,7 @@ function startNewMatch(){
   updateTypeFilterChips();
   updatePeriodFilterChips();
   updateEventSectionVisibility();
+  if(typeof saveState==='function') saveState();
   applyTeamColors();
   applyRefereeColor();
   updateRefereeColorToggles();
@@ -4039,7 +4043,7 @@ function buildSettingsModal(){
 
 async function resetSettingsToDefaults(){
   if(!(await showConfirmModal('Restore all settings to their default values?'))) return;
-  localStorage.removeItem('FalkEval105.2_settings');
+  localStorage.removeItem('FalkEval105.3_settings');
   location.reload();
 }
 function saveSettingsModal(){
