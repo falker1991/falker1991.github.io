@@ -392,7 +392,7 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
     <div class="header">
       <div>
         <div class="title-row"><h2>Match Notes</h2><button class="icon-btn" onclick="openInfo()" title="Info"><i class="ti ti-info-circle"></i></button><button class="icon-btn" onclick="openSettings()" title="Settings"><i class="ti ti-settings"></i></button><button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button></div>
-        <div class="subtitle">FalkEval • v7.1.8</div>
+        <div class="subtitle">FalkEval • v6.127.87</div>
       </div>
       <div class="clock-area">
         <div class="clockbox"><div class="clock" id="clock">00:00</div><div class="clock-period" id="clock-period">Not started</div></div>
@@ -2745,6 +2745,66 @@ body:not(.field-map-flipped) #et-setup-field .field-static-label.bench-right{
     try{ if(typeof window.renderFieldMap==='function')window.renderFieldMap(); }catch(e){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<script>
+/* v7.1.9: New Match modal starts blank/default instead of copying the previous match. */
+(function(){
+  function $(id){return document.getElementById(id);}
+  function setVal(id,val){var el=$(id);if(el)el.value=val;}
+  function setChecked(id,val){var el=$(id);if(el)el.checked=!!val;}
+  function resetNewMatchModalDefaults(){
+    // Match details
+    setVal('nm-date','');
+    setVal('nm-time','');
+    setVal('nm-age','');
+    setVal('nm-venue','');
+    setVal('nm-competition','');
+
+    // Teams and officials
+    setVal('nm-home','Home');
+    setVal('nm-away','Away');
+    setVal('nm-ref','');
+    setVal('nm-fourth','');
+    setVal('nm-ar1','');
+    setVal('nm-ar2','');
+
+    // Match rules/settings
+    setVal('nm-half-length','45');
+    setVal('nm-sub-limit','');
+    setVal('nm-et-length','15');
+    setChecked('nm-extra-time',false);
+    setChecked('nm-shootout',false);
+
+    // Collapse color pickers and keep the default/current setting colors available.
+    ['home','away','officials'].forEach(function(k){
+      var colors=$('nm-'+k+'-colors');
+      if(colors){colors.style.display='none';colors.innerHTML='';}
+      var mini=$('nm-'+k+'-mini');
+      if(mini && window.settings && settings.teamColors)mini.style.background=settings.teamColors[k];
+    });
+    window.activeNewMatchColor=null;
+
+    // Reset field setup and opening kickoff to defaults for the new match.
+    var defaultSetup={leftGoal:'home',rightGoal:'away',leftBench:'home',rightBench:'away'};
+    try{ window.__nmFieldSetupV72={leftGoal:'home',rightGoal:'away',leftBench:'home',rightBench:'away'}; }catch(e){}
+    try{ pendingNewMatchFieldSetup={leftGoal:'home',rightGoal:'away',leftBench:'home',rightBench:'away'}; }catch(e){}
+    try{ window.pendingNewMatchOpeningKickoff='home'; }catch(e){}
+    try{ if(typeof window.setNewMatchOpeningKickoff==='function')window.setNewMatchOpeningKickoff('home'); }catch(e){}
+    try{ if(typeof window.renderNewMatchFieldSetup==='function')window.renderNewMatchFieldSetup(); }catch(e){}
+    try{ if(typeof window.renderNewMatchOpeningKickoff==='function')window.renderNewMatchOpeningKickoff(); }catch(e){}
+  }
+
+  var previousOpen=window.openNewMatchModal;
+  window.openNewMatchModal=function(){
+    if(typeof previousOpen==='function')previousOpen.apply(this,arguments);
+    resetNewMatchModalDefaults();
+    var bg=$('new-match-modal-bg');
+    if(bg)bg.classList.add('open');
+  };
+  window.resetNewMatchModalDefaults=resetNewMatchModalDefaults;
 })();
 </script>
 
