@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Match Notes</title>
+<title>FalkEval 7.2.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root{
@@ -407,7 +407,7 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
 
   <div class="period-row" id="period-row"></div>
 
-  <div class="ended-row" id="ended-row" style="display:none"><button class="export-btn" onclick="exportLog()"><i class="ti ti-download"></i> Export Log</button><button class="btn-save" onclick="openNewMatchModal()"><i class="ti ti-plus"></i> New Match</button></div>
+  <div class="ended-row" id="ended-row" style="display:none"><button class="export-btn" onclick="importLog()"><i class="ti ti-upload"></i> Import Log</button><button class="export-btn" onclick="exportLog()"><i class="ti ti-download"></i> Export Log</button><button class="btn-save" onclick="openNewMatchModal()"><i class="ti ti-plus"></i> New Match</button></div>
 
   <div class="section collapsible" id="sec-match"><div class="section-head" onclick="toggleSection('sec-match')"><span>Match info</span><button>⌄</button></div><div class="section-body">
     <div class="match-info-row match-info-five"><input type="date" placeholder="Match date" id="match-date" style="font-size:12px"><input type="time" placeholder="Match time" id="match-time" style="font-size:12px"><input placeholder="Venue" id="match-venue" style="font-size:12px"><input placeholder="Competition" id="competition" style="font-size:12px"><input placeholder="Age group" id="age-group" style="font-size:12px"></div>
@@ -473,7 +473,7 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
           </div>
         </div>
       </div>
-      <div class="log-export-actions"><button class="export-btn" onclick="exportLog()"><i class="ti ti-download"></i> Export HTML</button> <button class="export-btn coach-only" onclick="copyForEval()">Evaluate ↗</button></div>
+      <div class="log-export-actions"><button class="export-btn" onclick="importLog()"><i class="ti ti-upload"></i> Import Log</button> <button class="export-btn" onclick="exportLog()"><i class="ti ti-download"></i> Export HTML</button> <button class="export-btn coach-only" onclick="copyForEval()">Evaluate ↗</button></div>
     </div>
     <div id="event-log"><div class="log-empty">No events logged yet</div></div>
   </div></div>
@@ -982,6 +982,45 @@ function startNewMatchFromModal(){
   document.getElementById('match-date').value=document.getElementById('nm-date').value;document.getElementById('match-time').value=document.getElementById('nm-time').value;document.getElementById('match-venue').value=document.getElementById('nm-venue').value;document.getElementById('competition').value=document.getElementById('nm-competition').value;document.getElementById('age-group').value=document.getElementById('nm-age').value;document.getElementById('home-name').value=document.getElementById('nm-home').value||'Home';document.getElementById('away-name').value=document.getElementById('nm-away').value||'Away';document.getElementById('ref-name').value=document.getElementById('nm-ref').value;document.getElementById('fourth-official').value=document.getElementById('nm-fourth').value;document.getElementById('ar1-name').value=document.getElementById('nm-ar1').value;document.getElementById('ar2-name').value=document.getElementById('nm-ar2').value;
   document.getElementById('period-length-input').value=matchHalfLength;closeNewMatchModal();renderPeriodPills();updateFilters();updateStats();renderLog();applySettings();updateClockDisplay();
 }
+
+function getLogData(){
+  return {
+    app:'Match Notes',version:'v6.127.87',exportedAt:new Date().toISOString(),
+    matchInfo:{date:document.getElementById('match-date')?.value||'',time:document.getElementById('match-time')?.value||'',venue:document.getElementById('match-venue')?.value||'',competition:document.getElementById('competition')?.value||'',ageGroup:document.getElementById('age-group')?.value||'',homeName:document.getElementById('home-name')?.value||'Home',awayName:document.getElementById('away-name')?.value||'Away',refName:document.getElementById('ref-name')?.value||'',fourthOfficial:document.getElementById('fourth-official')?.value||'',ar1Name:document.getElementById('ar1-name')?.value||'',ar2Name:document.getElementById('ar2-name')?.value||''},
+    settings,periods,currentPeriodIdx,periodElapsedBase,globalElapsedBase,matchEnded,matchHalfLength,matchETLength,matchNeedsWinner,matchAllowsET,matchAllowsShootout,matchSubLimit,shootoutFirstTeam,shootoutNextTeam,shootoutKickCount,shootoutRounds,events
+  };
+}
+function importLog(){
+  let input=document.createElement('input');input.type='file';input.accept='.html,.json,application/json,text/html';
+  input.onchange=()=>{let file=input.files&&input.files[0];if(!file)return;let reader=new FileReader();reader.onload=()=>importLogText(String(reader.result||''));reader.readAsText(file)};
+  input.click();
+}
+function importLogText(text){
+  try{
+    let data=null,trimmed=text.trim();
+    if(trimmed.startsWith('{')) data=JSON.parse(trimmed);
+    else{
+      let doc=new DOMParser().parseFromString(text,'text/html');
+      let node=doc.getElementById('match-notes-export-data');
+      if(node&&node.textContent) data=JSON.parse(node.textContent);
+    }
+    if(!data||!Array.isArray(data.events)) throw new Error('No Match Notes log data found.');
+    if(events.length&&!confirm('Importing will replace the current match log. Continue?'))return;
+    if(clockRunning){periodElapsedBase=livePeriodElapsed();globalElapsedBase=liveGlobalElapsed();clockStartWall=null;clearInterval(clockInterval);clockInterval=null;clockRunning=false}
+    let mi=data.matchInfo||{};
+    [['match-date','date'],['match-time','time'],['match-venue','venue'],['competition','competition'],['age-group','ageGroup'],['home-name','homeName'],['away-name','awayName'],['ref-name','refName'],['fourth-official','fourthOfficial'],['ar1-name','ar1Name'],['ar2-name','ar2Name']].forEach(([id,k])=>{let el=document.getElementById(id);if(el)el.value=mi[k]||((id==='home-name')?'Home':(id==='away-name')?'Away':'')});
+    settings=data.settings?Object.assign(JSON.parse(JSON.stringify(BASE_SETTINGS)),data.settings):settings;
+    periods=Array.isArray(data.periods)?data.periods:[];events=data.events;undoStack=[];
+    currentPeriodIdx=Number.isInteger(data.currentPeriodIdx)?data.currentPeriodIdx:(periods.length?0:-1);
+    periodElapsedBase=Number(data.periodElapsedBase)||0;globalElapsedBase=Number(data.globalElapsedBase)||0;matchEnded=!!data.matchEnded;
+    matchHalfLength=Number(data.matchHalfLength)||45;matchETLength=Number(data.matchETLength)||15;matchNeedsWinner=!!data.matchNeedsWinner;matchAllowsET=!!data.matchAllowsET;matchAllowsShootout=!!data.matchAllowsShootout;matchSubLimit=data.matchSubLimit??null;
+    shootoutFirstTeam=data.shootoutFirstTeam||null;shootoutNextTeam=data.shootoutNextTeam||null;shootoutKickCount=data.shootoutKickCount||{home:0,away:0};shootoutRounds=Number(data.shootoutRounds)||5;shootoutResult='';
+    document.getElementById('ended-row').style.display=matchEnded?'flex':'none';document.body.classList.toggle('match-ended',matchEnded);
+    recomputeMatchCountersFromEvents();renderPeriodPills();renderEventButtons();updateFilters();updateStats();renderLog();renderFieldMap();applySettings();updateClockDisplay();lockMatchEndedControls();
+    alert('Log imported.');
+  }catch(err){alert('Could not import this log. Please choose a Match Notes export file with embedded log data.');console.error(err)}
+}
+
 function exportLog(){
   const types=[...new Set(events.map(e=>e.type))].sort();
   const periodNames=[...new Set(events.map(e=>e.periodName).filter(Boolean))];
@@ -1298,6 +1337,7 @@ body.mentor-mode .event-item .event-tags:empty{display:none!important}
 .export-mini-field .field-marker{width:12px;height:12px;font-size:8px;border-width:1.5px;pointer-events:none}
 @media(max-width:560px){.export-mini-field{flex-basis:78px;width:78px;max-width:32%}}
 </style></head><body><div class="app"><h2>Match Event Log Export</h2><p class="subtitle">${new Date().toLocaleString()}</p>
+  <script type="application/json" id="match-notes-export-data">${JSON.stringify(getLogData()).replace(/</g,'\\u003c')}<\/script>
   <div class="filter-row"><strong style="font-size:11px;color:var(--muted)">Type:</strong><button class="type-chip active" data-filter-group="type" onclick="setExportFilter('type','all',this)">All</button>${types.map(t=>`<button class="type-chip" data-filter-group="type" onclick="setExportFilter('type','${t}',this)">${t}</button>`).join('')}</div>
   <div class="filter-row"><strong style="font-size:11px;color:var(--muted)">Officials:</strong>${[['all','All'],['CR','Referee'],['AR1','AR1'],['AR2','AR2'],['4th','4th'],['none','Unassigned']].map(([v,l],i)=>`<button class="type-chip ${i===0?'active':''}" data-filter-group="official" onclick="setExportFilter('official','${v}',this)">${l}</button>`).join('')}</div>
   <div class="filter-row"><strong style="font-size:11px;color:var(--muted)">Period:</strong><button class="type-chip active" data-filter-group="period" onclick="setExportFilter('period','all',this)">All</button>${periodNames.map(p=>`<button class="type-chip" data-filter-group="period" onclick="setExportFilter('period','${p}',this)">${p}</button>`).join('')}</div>
