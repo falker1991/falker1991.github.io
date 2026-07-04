@@ -385,6 +385,9 @@ body.match-ended #field-map::after{
 body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;border-color:rgba(255,255,255,.25)}
 
 </style>
+
+     <link rel="manifest" href="/manifest.json">
+
 </head>
 <body>
 <div class="app">
@@ -618,6 +621,19 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
 </div></div>
 <div class="officials-popover-bg" id="popover-bg" onclick="closePopover()"></div><div class="officials-popover" id="officials-popover" style="display:none"><h4>Officials involved</h4><div class="toggle-row" id="popover-chips"></div><button class="btn-save" style="width:100%" onclick="closePopover()">Done</button></div>
 <script>
+ // Put this in your main app.js or index.html script tag
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('Service Worker registered successfully with scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}
+
 const OFFICIALS=[{id:'CR',label:'Referee'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
 const CAUTION_REASONS=['UB-Reckless','UB-SPA','UB-DGF (PK)','UB-Other','PO','DT','FRD','DR','ERL'];
 const SENDOFF_REASONS=['2CT','DGF','DGH','SFP','VC','AL','S'];
