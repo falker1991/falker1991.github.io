@@ -386,7 +386,17 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
 
 </style>
 
-     <link rel="manifest" href="/manifest.json">
+<!-- PWA / Installable App Support -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#185FA5">
+<meta name="application-name" content="FalkEval">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FalkEval">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 
 </head>
 <body>
@@ -621,19 +631,6 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
 </div></div>
 <div class="officials-popover-bg" id="popover-bg" onclick="closePopover()"></div><div class="officials-popover" id="officials-popover" style="display:none"><h4>Officials involved</h4><div class="toggle-row" id="popover-chips"></div><button class="btn-save" style="width:100%" onclick="closePopover()">Done</button></div>
 <script>
- // Put this in your main app.js or index.html script tag
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered successfully with scope:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('Service Worker registration failed:', error);
-      });
-  });
-}
-
 const OFFICIALS=[{id:'CR',label:'Referee'},{id:'AR1',label:'AR1'},{id:'AR2',label:'AR2'},{id:'4th',label:'4th'}];
 const CAUTION_REASONS=['UB-Reckless','UB-SPA','UB-DGF (PK)','UB-Other','PO','DT','FRD','DR','ERL'];
 const SENDOFF_REASONS=['2CT','DGF','DGH','SFP','VC','AL','S'];
@@ -1116,7 +1113,90 @@ function exportLog(options={officials:true,match:true,stats:true,fieldmaps:setti
   const exportFilters={type:'all',official:'all',period:'all',team:'all',decision:'all',pm:'all'};
   function setExportFilter(group,value,btn){exportFilters[group]=value;document.querySelectorAll('[data-filter-group="'+group+'"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyExportFilters();}
   function applyExportFilters(){document.querySelectorAll('.export-row').forEach(row=>{let ok=true;if(exportFilters.type!=='all')ok=ok&&row.dataset.type===exportFilters.type;if(exportFilters.period!=='all')ok=ok&&row.dataset.period===exportFilters.period;if(exportFilters.team!=='all')ok=ok&&row.dataset.team===exportFilters.team;if(exportFilters.pm!=='all')ok=ok&&row.dataset.pm===exportFilters.pm;if(exportFilters.decision!=='all')ok=ok&&(row.dataset.decision||'').split(' ').includes(exportFilters.decision);if(exportFilters.official!=='all'){let off=row.dataset.officials||'none';ok=ok&&(exportFilters.official==='none'?off==='none':off.split(',').includes(exportFilters.official));}row.style.display=ok?'':'none';});}
-  <\/script></body></html>`;
+  <\/script>
+<script>
+/* PWA install + service worker registration */
+(function () {
+  let deferredInstallPrompt = null;
+
+  function createInstallButton() {
+    if (document.getElementById("install-app-btn")) return;
+    const button = document.createElement("button");
+    button.id = "install-app-btn";
+    button.className = "icon-btn";
+    button.type = "button";
+    button.title = "Install FalkEval";
+    button.style.display = "none";
+    button.innerHTML = "⬇ Install";
+
+    const titleRow = document.querySelector(".title-row");
+    if (titleRow) {
+      titleRow.appendChild(button);
+    } else {
+      button.style.position = "fixed";
+      button.style.right = "12px";
+      button.style.bottom = "12px";
+      button.style.zIndex = "9999";
+      document.body.appendChild(button);
+    }
+
+    button.addEventListener("click", async function () {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      button.style.display = "none";
+    });
+  }
+
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    createInstallButton();
+    const button = document.getElementById("install-app-btn");
+    if (button) button.style.display = "inline-flex";
+  });
+
+  window.addEventListener("appinstalled", function () {
+    deferredInstallPrompt = null;
+    const button = document.getElementById("install-app-btn");
+    if (button) button.style.display = "none";
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+        .then(function (registration) {
+          registration.update();
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+          registration.addEventListener("updatefound", function () {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener("statechange", function () {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: "SKIP_WAITING" });
+              }
+            });
+          });
+        })
+        .catch(function (error) {
+          console.warn("Service worker registration failed:", error);
+        });
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }
+})();
+</script>
+
+</body></html>`;
   let blob=new Blob([html],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='match-event-log.html';a.click();URL.revokeObjectURL(a.href)
 }
 function copyForEval(){navigator.clipboard?.writeText(events.map(e=>`${pad(e.minute)}:${pad(e.second)} ${e.type} ${e.teamName||''} ${e.notes||''}`).join('\n'));alert('Log copied for evaluation.')}function toggleDark(){document.body.classList.toggle('dark')}function openInfo(){document.getElementById('info-bg').classList.add('open')}function closeInfo(){document.getElementById('info-bg').classList.remove('open')}
