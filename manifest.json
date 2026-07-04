@@ -1,0 +1,22 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "falker1991.github",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "short_name": "falker1991.github",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "FalkEval Match Logger",
+  "description": "Use this tool to record event logs for soccer matches. Great for recapping a game, taking notes for evaluations, or recording for official sources.",
+  "lang": "en",
+  "display_override": [
+    "standalone",
+    "fullscreen",
+    "window-controls-overlay"
+  ],
+  "categories": [
+    "sports"
+  ]
+}
