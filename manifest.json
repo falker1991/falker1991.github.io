@@ -1,0 +1,21 @@
+{
+  "name": "RefHQEval",
+  "short_name": "RefHQEval",
+  "description": "Referee match evaluation and event logging app.",
+  "start_url": "./RefHQEval_index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#123A66",
+  "icons": [
+    {
+      "src": "./icons/refhqeval-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/refhqeval-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
