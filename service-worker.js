@@ -1,6 +1,6 @@
 // FalkEval service worker
 // Change this cache name whenever you publish a new package.
-const CACHE_NAME = "falkeval-pwa-fixed-v2";
+const CACHE_NAME = "falkeval-pwa-fixed-v3";
 
 const APP_SHELL = [
   "./",
