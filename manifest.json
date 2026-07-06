@@ -2,7 +2,7 @@
   "name": "RefHQEval",
   "short_name": "RefHQEval",
   "description": "Referee match evaluation and event logging app.",
-  "start_url": "./RefHQEval_index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#123A66",
