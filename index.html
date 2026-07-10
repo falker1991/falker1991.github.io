@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RefHQEval 7.2.3</title>
+<title>FalkRefEval 7.2.4</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 <style>
 :root{
@@ -385,7 +385,7 @@ body.match-ended #field-map::after{
 body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;border-color:rgba(255,255,255,.25)}
 
 
-/* RefHQEval branding */
+/* FalkRefEval branding */
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .app-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -400,14 +400,14 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
 <!-- PWA / Installable App Support -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#123A66">
-<meta name="application-name" content="RefHQEval">
+<meta name="application-name" content="FalkRefEval">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="RefHQEval">
-<link rel="apple-touch-icon" href="./icons/refhqeval-icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./icons/refhqeval-icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="./icons/refhqeval-icon-512.png">
+<meta name="apple-mobile-web-app-title" content="FalkRefEval">
+<link rel="apple-touch-icon" href="./icons/FalkRef-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/FalkRef-icon.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/FalkRef-icon.png">
 
 </head>
 <body>
@@ -417,10 +417,10 @@ body.dark.match-ended #field-map::after{background:rgba(30,30,32,.9);color:#fff;
       <div class="brand-lockup">
         <img
          class="app-logo"
-         src="./icons/refhqeval-icon-192.png"
-         alt="RefHQEval logo">
+         src="./icons/FalkRef-icon.png"
+         alt="FalkRefEval logo">
         <div class="brand-text">
-          <div class="brand-title-row"><h2>RefHQEval</h2><button class="icon-btn" onclick="openInfo()" title="Info"><i class="ti ti-info-circle"></i></button><button class="icon-btn" onclick="openSettings()" title="Settings"><i class="ti ti-settings"></i></button><button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button></div>
+          <div class="brand-title-row"><h2>FalkRefEval</h2><button class="icon-btn" onclick="openInfo()" title="Info"><i class="ti ti-info-circle"></i></button><button class="icon-btn" onclick="openSettings()" title="Settings"><i class="ti ti-settings"></i></button><button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button></div>
           <div class="brand-subtitle">Match Evaluation System • v7.2.3</div>
         </div>
       </div>
@@ -1117,7 +1117,7 @@ function exportLog(options={officials:true,match:true,stats:true,fieldmaps:setti
   let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Match Event Log Export</title><style>${document.querySelector('style').innerHTML}
 .export-row .event-item{align-items:center}.export-mini-field{position:relative;flex:0 0 96px;width:96px;max-width:28%;aspect-ratio:1.55/1;border:1.5px solid #fff;border-radius:7px;background:#3f9f56;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);margin-left:8px}.export-mini-field:before{content:"";position:absolute;inset:5px;border:1.5px solid rgba(255,255,255,.9);border-radius:2px}.export-mini-field .field-midline{left:50%;top:5px;width:1.5px;height:calc(100% - 10px);transform:translateX(-50%)}.export-mini-field .field-circle{width:22%;border-width:1.5px}.export-mini-field .field-box{top:25%;width:15%;height:50%;border-width:1.5px}.export-mini-field .field-box.left{left:5px}.export-mini-field .field-box.right{right:5px}.export-mini-field .field-small-box{top:36%;width:7%;height:28%;border-width:1.5px}.export-mini-field .field-small-box.left{left:5px}.export-mini-field .field-small-box.right{right:5px}.export-mini-field .field-spot{width:3px;height:3px}.export-mini-field .field-marker{width:12px;height:12px;font-size:8px;border-width:1.5px;pointer-events:none}input[readonly]{pointer-events:none;user-select:text;opacity:1}.export-filters{display:grid;gap:6px;margin:10px 0 12px}.export-section-note{font-size:12px;color:var(--muted);margin:8px 0}
 
-/* RefHQEval branding */
+/* FalkRefEval branding */
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .app-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -2139,7 +2139,7 @@ openNewMatchModal=function(){
 .field-map-actions{display:flex!important;gap:6px!important;align-items:center!important;flex-wrap:wrap!important;}
 #field-flipped-note{font-size:10px!important;color:var(--muted)!important;font-weight:700!important;}
 
-/* RefHQEval branding */
+/* FalkRefEval branding */
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .app-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -2334,7 +2334,7 @@ openNewMatchModal=function(){
 #field-flip-btn.active{background:var(--info)!important;color:var(--infoText)!important;border-color:var(--infoText)!important;font-weight:800!important;}
 body.field-map-flipped #field-flip-btn{background:var(--info)!important;color:var(--infoText)!important;border-color:var(--infoText)!important;font-weight:800!important;}
 
-/* RefHQEval branding */
+/* FalkRefEval branding */
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .app-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -2572,7 +2572,7 @@ body:not(.field-map-flipped) #et-setup-field .field-static-label.bench-right{
   display:none!important;
 }
 
-/* RefHQEval branding */
+/* FalkRefEval branding */
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .app-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -2688,7 +2688,7 @@ body:not(.field-map-flipped) #et-setup-field .field-static-label.bench-right{
     button.id = "install-app-btn";
     button.className = "icon-btn";
     button.type = "button";
-    button.title = "Install RefHQEval";
+    button.title = "Install FalkRefEval";
     button.style.display = "none";
     button.innerHTML = "⬇ Install";
 
