@@ -1,6 +1,6 @@
 {
-  "name": "RefHQEval",
-  "short_name": "RefHQEval",
+  "name": "FalkRefEval",
+  "short_name": "FalkRefEval",
   "description": "Referee match evaluation and event logging app.",
   "start_url": "./",
   "scope": "./",
